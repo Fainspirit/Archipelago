@@ -256,6 +256,7 @@ class ALTTPWorld(World):
         ShopSlotFill(world)
 
     def generate_output(self, output_directory: str):
+        """Apply selected settings to the rom and save it in /output"""
         world = self.world
         player = self.player
         try:
@@ -286,6 +287,7 @@ class ALTTPWorld(World):
             }
             palettes_options = {key: option.current_key for key, option in palettes_options.items()}
 
+            # User customization
             apply_rom_settings(rom, world.heartbeep[player].current_key,
                                world.heartcolor[player].current_key,
                                world.quickswap[player],
@@ -296,6 +298,7 @@ class ALTTPWorld(World):
                                reduceflashing=world.reduceflashing[player] or world.is_race,
                                triforcehud=world.triforcehud[player].current_key)
 
+            # Write modified ROM to disk
             outfilepname = f'_P{player}'
             outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
                 if world.player_name[player] != 'Player%d' % player else ''
