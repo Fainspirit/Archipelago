@@ -166,8 +166,10 @@ def main(args=None, callback=ERmain):
         path = player_path_cache[player]
         if path:
             try:
+                # Calculate the final values for generation options
                 settings = settings_cache[path] if settings_cache[path] else \
                     roll_settings(weights_cache[path], args.plando)
+                # For each option, copy it to entrance randomizer args, overwriting existing values
                 for k, v in vars(settings).items():
                     if v is not None:
                         try:
@@ -184,6 +186,7 @@ def main(args=None, callback=ERmain):
             erargs.name[player] = f"Player{player}"
         elif not erargs.name[player]:  # if name was not specified, generate it from filename
             erargs.name[player] = os.path.splitext(os.path.split(path)[-1])[0]
+        # Set final player name
         erargs.name[player] = handle_name(erargs.name[player], player, name_counter)
 
     if len(set(erargs.name.values())) != len(erargs.name):
@@ -253,6 +256,7 @@ def get_choice_legacy(option, root, value=None) -> typing.Any:
 
 
 def get_choice(option, root, value=None) -> typing.Any:
+    """Randomly assign the given option a value based on the provided weights"""
     if option not in root:
         return value
     if type(root[option]) is list:
@@ -272,6 +276,7 @@ class SafeDict(dict):
 
 
 def handle_name(name: str, player: int, name_counter: Counter):
+    """Convert name option into actual player name, accounting for duplicated names"""
     name_counter[name] += 1
     new_name = "%".join([x.replace("%number%", "{number}").replace("%player%", "{player}") for x in name.split("%%")])
     new_name = string.Formatter().vformat(new_name, (), SafeDict(number=name_counter[name],
@@ -425,6 +430,7 @@ def get_plando_bosses(boss_shuffle: str, plando_options: typing.Set[str]) -> str
 
 
 def handle_option(ret: argparse.Namespace, game_weights: dict, option_key: str, option: type(Options.Option)):
+    """Select the option's value, based on weights if applicable, and add the chosen attribute:value pair to ret"""
     if option_key in game_weights:
         try:
             if not option.supports_weighting:
@@ -451,6 +457,7 @@ def handle_option(ret: argparse.Namespace, game_weights: dict, option_key: str, 
 
 
 def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("bosses",))):
+    """Decide all of the settings that will be used for world generation"""
     if "linked_options" in weights:
         weights = roll_linked_options(weights)
 
@@ -500,6 +507,7 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
             handle_option(ret, game_weights, option_key, option)
         for option_key, option in Options.per_game_common_options.items():
             handle_option(ret, game_weights, option_key, option)
+        # Item plando
         if "items" in plando_options:
             ret.plando_items = roll_item_plando(world_type, game_weights)
         if ret.game == "Minecraft":
@@ -522,9 +530,11 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
 
 
 def roll_item_plando(world_type, weights):
+    """Choose and validate the existence of plando'd items and their locations"""
     plando_items = []
 
     def add_plando_item(item: str, location: str):
+        """Parse the item/location to be plando'd"""
         if item not in world_type.item_name_to_id:
             raise Exception(f"Could not plando item {item} as the item was not recognized")
         if location not in world_type.location_name_to_id:
@@ -560,6 +570,7 @@ def roll_item_plando(world_type, weights):
 
 
 def roll_alttp_settings(ret: argparse.Namespace, weights, plando_options):
+    """Set aLttP specific options"""
     if "dungeon_items" in weights and get_choice_legacy('dungeon_items', weights, "none") != "none":
         raise Exception(f"dungeon_items key in A Link to the Past was removed, but is present in these weights as {get_choice_legacy('dungeon_items', weights, False)}.")
     glitches_required = get_choice_legacy('glitches_required', weights)
@@ -610,6 +621,7 @@ def roll_alttp_settings(ret: argparse.Namespace, weights, plando_options):
         ret.triforce_pieces_available = ret.triforce_pieces_required + extra_pieces
 
     # change minimum to required pieces to avoid problems
+    # also cap max pieces at 90
     ret.triforce_pieces_available = min(max(ret.triforce_pieces_required, int(ret.triforce_pieces_available)), 90)
 
     ret.shop_shuffle = get_choice_legacy('shop_shuffle', weights, '')
