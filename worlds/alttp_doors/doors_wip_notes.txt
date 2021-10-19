@@ -1,0 +1,78 @@
+------------------
+CONFUSION
+------------------
+
+__init__.py: 264
+    pot shuffle enables enemizer?
+    
+    need to make nodes!
+    
+    add --doors to args?
+    
+    main - seed check is suboptimal
+    
+    Generate:handle_option is verifying item names if verify is false??
+    
+plando arg defaults to bosses
+
+Generate: why "please fix yaml" error
+
+Generate:roll_settings - why plando options arg??
+
+no need to raise exception on Generate:handle_name being archipelago
+    why not follow x1 pattern?
+    
+Why is name parsing done in aLttP generation?
+
+multiworld constructor is weird
+
+change main to only assign world options if the game is alttp ???
+
+multiworld object also called "world" like the game "worlds"
+    game ones be "world_plane" / "realm" / game_world
+    
+Multiworld.sprite -> Multiworld.sprites
+
+------------------
+POSSIBLY VERY BAD
+------------------
+
+ER args all get copied over - potentially slow for large world!
+
+Main sets aLttP attributes for all players???
+
+prize pool placement uses shuffle - change it to use index bag instead? (alttp init)
+
+------------------
+USEFUL STUFF
+------------------
+
+Weights cache - where all the args go
+Generate pulls ER args, pull doors ones too?
+
+roll_alttp_settings Generate:568
+    Why is this not in alttp world?
+    
+entrance shuffle legacy stuff in Generate-roll alttp
+
+
+BaseClasses:set_options assigns options for world specific options
+
+alttp/__init__:generate_early
+
+pendants outside of boss prizes?
+
+alttp/__init__:pre_fill - create_item, get location
+
+
+
+Prizes in chest dead end rooms ???
+
+
+builds locations from regions
+
+change triforce pieces from advancement to never exclude ?
+
+Need to 
+
+Regions.py for a new world

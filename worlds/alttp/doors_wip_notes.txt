@@ -1,2 +1,0 @@
-__init__.py: 264
-    pot shuffle enables enemizer?
