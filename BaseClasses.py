@@ -240,7 +240,7 @@ class MultiWorld():
 
         for item in self.itempool:
             self.worlds[item.player].collect(ret, item)
-        from worlds.alttp.Dungeons import get_dungeon_item_pool
+        from worlds.alttp_legacy.Dungeons import get_dungeon_item_pool
         for item in get_dungeon_item_pool(self):
             subworld = self.worlds[item.player]
             if item.name in subworld.dungeon_local_item_names:
@@ -479,7 +479,7 @@ class CollectionState(object):
                 self.collect(item, True)
 
     def update_reachable_regions(self, player: int):
-        from worlds.alttp.EntranceShuffle import indirect_connections
+        from worlds.alttp_legacy.EntranceShuffle import indirect_connections
         self.stale[player] = False
         rrp = self.reachable_regions[player]
         bc = self.blocked_connections[player]
@@ -1098,7 +1098,7 @@ class Spoiler():
             listed_locations.update(other_locations)
 
         self.shops = []
-        from worlds.alttp.Shops import ShopType, price_type_display_name, price_rate_display
+        from worlds.alttp_legacy.Shops import ShopType, price_type_display_name, price_rate_display
         for shop in self.world.shops:
             if not shop.custom:
                 continue

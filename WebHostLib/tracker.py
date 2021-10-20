@@ -5,7 +5,7 @@ from werkzeug.exceptions import abort
 import datetime
 from uuid import UUID
 
-from worlds.alttp import Items
+from worlds.alttp_legacy import Items
 from WebHostLib import app, cache, Room
 from Utils import restricted_loads
 from worlds import lookup_any_item_id_to_name, lookup_any_location_id_to_name

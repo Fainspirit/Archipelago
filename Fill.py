@@ -338,7 +338,7 @@ def swap_location_item(location_1: Location, location_2: Location, check_locked=
 
 def distribute_planned(world: MultiWorld):
     # TODO: remove. Preferably by implementing key drop
-    from worlds.alttp.Regions import key_drop_data
+    from worlds.alttp_legacy.Regions import key_drop_data
     world_name_lookup = world.world_name_lookup
 
     for player in world.player_ids:

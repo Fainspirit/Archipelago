@@ -8,7 +8,7 @@ from typing import Dict, Optional as TypeOptional
 
 from flask import request, flash, redirect, url_for, session, render_template
 
-from worlds.alttp.EntranceRandomizer import parse_arguments
+from worlds.alttp_legacy.EntranceRandomizer import parse_arguments
 from Main import main as ERmain
 from BaseClasses import seeddigits, get_seed
 from Generate import handle_name

@@ -1,14 +1,14 @@
 import collections
 import logging
-from worlds.alttp import OverworldGlitchRules
+from worlds.alttp_legacy import OverworldGlitchRules
 from BaseClasses import RegionType, MultiWorld, Entrance
-from worlds.alttp.Items import ItemFactory, progression_items, item_name_groups
-from worlds.alttp.OverworldGlitchRules import overworld_glitches_rules, no_logic_rules
-from worlds.alttp.UnderworldGlitchRules import underworld_glitches_rules
-from worlds.alttp.Bosses import GanonDefeatRule
+from worlds.alttp_legacy.Items import ItemFactory, progression_items, item_name_groups
+from worlds.alttp_legacy.OverworldGlitchRules import overworld_glitches_rules, no_logic_rules
+from worlds.alttp_legacy.UnderworldGlitchRules import underworld_glitches_rules
+from worlds.alttp_legacy.Bosses import GanonDefeatRule
 from worlds.generic.Rules import set_rule, add_rule, forbid_item, add_item_rule, item_in_locations, \
     item_name
-from worlds.alttp.Options import smallkey_shuffle
+from worlds.alttp_legacy.Options import smallkey_shuffle
 
 
 def set_rules(world):
@@ -131,7 +131,7 @@ def set_always_allow(spot, rule):
 
 
 def add_lamp_requirement(world: MultiWorld, spot, player: int, has_accessible_torch: bool = False):
-    if world.dark_room_logic[player] == "lamp":
+    if world.dark_room_logic[player] in ["lamp", "Lamp"]:
         add_rule(spot, lambda state: state.has('Lamp', player))
     elif world.dark_room_logic[player] == "torches":  # implicitly lamp as well
         if has_accessible_torch:

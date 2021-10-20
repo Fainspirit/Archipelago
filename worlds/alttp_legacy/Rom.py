@@ -21,23 +21,23 @@ import bsdiff4
 from typing import Optional
 
 from BaseClasses import CollectionState, Region
-from worlds.alttp.SubClasses import ALttPLocation
-from worlds.alttp.Shops import ShopType, ShopPriceType
-from worlds.alttp.Dungeons import dungeon_music_addresses
-from worlds.alttp.Regions import location_table, old_location_address_to_new_location_address
-from worlds.alttp.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
-from worlds.alttp.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
+from worlds.alttp_legacy.SubClasses import ALttPLocation
+from worlds.alttp_legacy.Shops import ShopType, ShopPriceType
+from worlds.alttp_legacy.Dungeons import dungeon_music_addresses
+from worlds.alttp_legacy.Regions import location_table, old_location_address_to_new_location_address
+from worlds.alttp_legacy.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
+from worlds.alttp_legacy.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
     Blind_texts, \
     BombShop2_texts, junk_texts
 
-from worlds.alttp.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
+from worlds.alttp_legacy.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
     DeathMountain_texts, \
     LostWoods_texts, WishingWell_texts, DesertPalace_texts, MountainTower_texts, LinksHouse_texts, Lumberjacks_texts, \
     SickKid_texts, FluteBoy_texts, Zora_texts, MagicShop_texts, Sahasrahla_names
 from Utils import local_path, int16_as_bytes, int32_as_bytes, snes_to_pc, is_frozen
-from worlds.alttp.Items import ItemFactory, item_table
-from worlds.alttp.EntranceShuffle import door_addresses
-from worlds.alttp.Options import smallkey_shuffle
+from worlds.alttp_legacy.Items import ItemFactory, item_table
+from worlds.alttp_legacy.EntranceShuffle import door_addresses
+from worlds.alttp_legacy.Options import smallkey_shuffle
 import Patch
 
 try:

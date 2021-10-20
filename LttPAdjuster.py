@@ -19,7 +19,7 @@ from tkinter import Tk, Frame, Label, StringVar, Entry, filedialog, messagebox, 
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
-from worlds.alttp.Rom import Sprite, LocalRom, apply_rom_settings, get_base_rom_bytes
+from worlds.alttp_legacy.Rom import Sprite, LocalRom, apply_rom_settings, get_base_rom_bytes
 from Utils import output_path, local_path, open_file
 
 

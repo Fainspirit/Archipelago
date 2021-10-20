@@ -389,7 +389,7 @@ per_game_common_options = {
 
 if __name__ == "__main__":
 
-    from worlds.alttp.Options import Logic
+    from worlds.alttp_legacy.Options import Logic
     import argparse
 
     map_shuffle = Toggle

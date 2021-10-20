@@ -294,7 +294,7 @@ def get_adjuster_settings(romfile: str, skip_questions: bool = False) -> typing.
 
     if adjuster_settings:
         import pprint
-        from worlds.alttp.Rom import get_base_rom_path
+        from worlds.alttp_legacy.Rom import get_base_rom_path
         adjuster_settings.rom = romfile
         adjuster_settings.baserom = get_base_rom_path()
         adjuster_settings.world = None
