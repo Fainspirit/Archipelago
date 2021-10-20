@@ -1,15 +1,19 @@
+"""Contains various name groupings of items"""
 from collections import namedtuple
 import logging
 
 from BaseClasses import Region, RegionType
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.Shops import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
-from worlds.alttp_legacy.Bosses import place_bosses
-from worlds.alttp_legacy.Dungeons import get_dungeon_item_pool_player
-from worlds.alttp_legacy.EntranceShuffle import connect_entrance
 from Fill import FillError
-from worlds.alttp_legacy.Items import ItemFactory, GetBeemizerItem
-from worlds.alttp_legacy.Options import smallkey_shuffle
+
+from worlds.alttp.legacy.Bosses import place_bosses
+from worlds.alttp.legacy.Dungeons import get_dungeon_item_pool_player
+from worlds.alttp.legacy.Items import ItemFactory, GetBeemizerItem
+from worlds.alttp.standard.options import smallkey_shuffle
+
+from worlds.alttp.generic.SubClasses import ALttPLocation
+from worlds.alttp.generic.shop import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
+
+from worlds.alttp.entrance_randomizer.EntranceShuffle import connect_entrance
 
 # This file sets the item pools for various modes. Timed modes and triforce hunt are enforced first, and then extra items are specified per mode to fill in the remaining space.
 # Some basic items that various modes require are placed here, including pendants and crystals. Medallion requirements for the two relevant entrances are also decided.
@@ -285,7 +289,7 @@ def generate_itempool(world):
     if world.goal[player] in ['triforcehunt', 'localtriforcehunt', 'icerodhunt']:
         region = world.get_region('Light World', player)
 
-        loc = ALttPLocationLegacy(player, "Murahdahla", parent=region)
+        loc = ALttPLocation(player, "Murahdahla", parent=region)
         loc.access_rule = lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player)
 
         region.locations.append(loc)
@@ -503,7 +507,7 @@ def create_dynamic_shop_locations(world, player):
                 if item is None:
                     continue
                 if item['create_location']:
-                    loc = ALttPLocationLegacy(player, f"{shop.region.name} {shop.slot_names[i]}", parent=shop.region)
+                    loc = ALttPLocation(player, f"{shop.region.name} {shop.slot_names[i]}", parent=shop.region)
                     shop.region.locations.append(loc)
                     world.dynamic_locations.append(loc)
 

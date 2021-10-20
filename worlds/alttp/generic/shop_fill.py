@@ -3,161 +3,19 @@ from enum import unique, IntEnum
 from typing import List, Optional, Set, NamedTuple, Dict
 import logging
 
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.EntranceShuffle import door_addresses
-from worlds.alttp_legacy.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp.generic.SubClasses import ALttPLocation
+from worlds.alttp.entrance_randomizer.EntranceShuffle import door_addresses
+from worlds.alttp.generic.shop import Shop, shop_class_mapping, price_to_funny_price, ShopData, shop_table_by_location, ShopType
+from worlds.alttp.legacy.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
+from worlds.alttp.standard.options import smallkey_shuffle
 from Utils import int16_as_bytes
+
 
 logger = logging.getLogger("Shops")
 
 
-@unique
-class ShopType(IntEnum):
-    Shop = 0
-    TakeAny = 1
-    UpgradeShop = 2
-
-
-@unique
-class ShopPriceType(IntEnum):
-    Rupees = 0
-    Hearts = 1
-    Magic = 2
-    Bombs = 3
-    Arrows = 4
-    HeartContainer = 5
-    BombUpgrade = 6
-    ArrowUpgrade = 7
-    Keys = 8
-    Potion = 9
-    Item = 10
-
-
-class Shop():
-    slots: int = 3  # slot count is not dynamic in asm, however inventory can have None as empty slots
-    blacklist: Set[str] = set()  # items that don't work, todo: actually check against this
-    type = ShopType.Shop
-    slot_names: Dict[int, str] = {
-        0: "Left",
-        1: "Center",
-        2: "Right"
-    }
-
-    def __init__(self, region, room_id: int, shopkeeper_config: int, custom: bool, locked: bool, sram_offset: int):
-        self.region = region
-        self.room_id = room_id
-        self.inventory: List[Optional[dict]] = [None] * self.slots
-        self.shopkeeper_config = shopkeeper_config
-        self.custom = custom
-        self.locked = locked
-        self.sram_offset = sram_offset
-
-    @property
-    def item_count(self) -> int:
-        for x in range(self.slots - 1, -1, -1):  # last x is 0
-            if self.inventory[x]:
-                return x + 1
-        return 0
-
-    def get_bytes(self) -> List[int]:
-        # [id][roomID-low][roomID-high][doorID][zero][shop_config][shopkeeper_config][sram_index]
-        entrances = self.region.entrances
-        config = self.item_count
-        if len(entrances) == 1 and entrances[0].name in door_addresses:
-            door_id = door_addresses[entrances[0].name][0] + 1
-        else:
-            door_id = 0
-            config |= 0x40  # ignore door id
-        if self.type == ShopType.TakeAny:
-            config |= 0x80
-        elif self.type == ShopType.UpgradeShop:
-            config |= 0x10  # Alt. VRAM
-        return [0x00] + int16_as_bytes(self.room_id) + [door_id, 0x00, config, self.shopkeeper_config, 0x00]
-
-    def has_unlimited(self, item: str) -> bool:
-        for inv in self.inventory:
-            if inv is None:
-                continue
-            if inv['max']:
-                if inv['replacement'] == item:
-                    return True
-            elif inv['item'] == item:
-                return True
-
-        return False
-
-    def has(self, item: str) -> bool:
-        for inv in self.inventory:
-            if inv is None:
-                continue
-            if inv['item'] == item:
-                return True
-            if inv['replacement'] == item:
-                return True
-        return False
-
-    def clear_inventory(self):
-        self.inventory = [None] * self.slots
-
-    def add_inventory(self, slot: int, item: str, price: int, max: int = 0,
-                      replacement: Optional[str] = None, replacement_price: int = 0, create_location: bool = False,
-                      player: int = 0, price_type: int = ShopPriceType.Rupees,
-                      replacement_price_type: int = ShopPriceType.Rupees):
-        self.inventory[slot] = {
-            'item': item,
-            'price': price,
-            'price_type': price_type,
-            'max': max,
-            'replacement': replacement,
-            'replacement_price': replacement_price,
-            'replacement_price_type': replacement_price_type,
-            'create_location': create_location,
-            'player': player
-        }
-
-    def push_inventory(self, slot: int, item: str, price: int, max: int = 1, player: int = 0,
-                       price_type: int = ShopPriceType.Rupees):
-        if not self.inventory[slot]:
-            raise ValueError("Inventory can't be pushed back if it doesn't exist")
-
-        if not self.can_push_inventory(slot):
-            logging.warning(f'Warning, there is already an item pushed into this slot.')
-
-        self.inventory[slot] = {
-            'item': item,
-            'price': price,
-            'price_type': price_type,
-            'max': max,
-            'replacement': self.inventory[slot]["item"],
-            'replacement_price': self.inventory[slot]["price"],
-            'replacement_price_type': self.inventory[slot]["price_type"],
-            'create_location': self.inventory[slot]["create_location"],
-            'player': player
-        }
-
-    def can_push_inventory(self, slot: int):
-        return self.inventory[slot] and not self.inventory[slot]["replacement"]
-
-
-class TakeAny(Shop):
-    type = ShopType.TakeAny
-
-
-class UpgradeShop(Shop):
-    type = ShopType.UpgradeShop
-    # Potions break due to VRAM flags set in UpgradeShop.
-    # Didn't check for more things breaking as not much else can be shuffled here currently
-    blacklist = item_name_groups["Potions"]
-
-
-shop_class_mapping = {ShopType.UpgradeShop: UpgradeShop,
-                      ShopType.Shop: Shop,
-                      ShopType.TakeAny: TakeAny}
-
-
 def FillDisabledShopSlots(world):
-    shop_slots: Set[ALttPLocationLegacy] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations
                                       if location.shop_slot is not None and location.shop_slot_disabled}
     for location in shop_slots:
@@ -168,7 +26,7 @@ def FillDisabledShopSlots(world):
 
 
 def ShopSlotFill(world):
-    shop_slots: Set[ALttPLocationLegacy] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations if location.shop_slot is not None}
     removed = set()
     for location in shop_slots:
@@ -265,6 +123,8 @@ def ShopSlotFill(world):
 
 
 def create_shops(world, player: int):
+    from .shop import shop_table, _basic_shop_defaults, _dark_world_shop_defaults, _inverted_hylia_shop_defaults, total_dynamic_shop_slots
+
     option = world.shop_shuffle[player]
 
     player_shop_table = shop_table.copy()
@@ -313,7 +173,7 @@ def create_shops(world, player: int):
             shop.add_inventory(index, *item)
             if not locked and num_slots:
                 slot_name = f"{region.name} {shop.slot_names[index]}"
-                loc = ALttPLocationLegacy(player, slot_name, address=shop_table_by_location[slot_name],
+                loc = ALttPLocation(player, slot_name, address=shop_table_by_location[slot_name],
                                     parent=region, hint_text="for sale")
                 loc.shop_slot = index
                 loc.locked = True
@@ -335,53 +195,12 @@ def create_shops(world, player: int):
                 world.clear_location_cache()
 
 
-class ShopData(NamedTuple):
-    room: int
-    type: ShopType
-    shopkeeper: int
-    custom: bool
-    locked: Optional[bool]
-    items: List
-    sram_offset: int
 
 
-# (type, room_id, shopkeeper, custom, locked, [items], sram_offset)
-# item = (item, price, max=0, replacement=None, replacement_price=0)
-_basic_shop_defaults = [('Red Potion', 150), ('Small Heart', 10), ('Bombs (10)', 50)]
-_dark_world_shop_defaults = [('Red Potion', 150), ('Blue Shield', 50), ('Bombs (10)', 50)]
-_inverted_hylia_shop_defaults = [('Blue Potion', 160), ('Blue Shield', 50), ('Bombs (10)', 50)]
-shop_table: Dict[str, ShopData] = {
-    'Cave Shop (Dark Death Mountain)': ShopData(0x0112, ShopType.Shop, 0xC1, True, False, _basic_shop_defaults, 0),
-    'Red Shield Shop': ShopData(0x0110, ShopType.Shop, 0xC1, True, False,
-                                [('Red Shield', 500), ('Bee', 10), ('Arrows (10)', 30)], 3),
-    'Dark Lake Hylia Shop': ShopData(0x010F, ShopType.Shop, 0xC1, True, False, _dark_world_shop_defaults, 6),
-    'Dark World Lumberjack Shop': ShopData(0x010F, ShopType.Shop, 0xC1, True, False, _dark_world_shop_defaults, 9),
-    'Village of Outcasts Shop': ShopData(0x010F, ShopType.Shop, 0xC1, True, False, _dark_world_shop_defaults, 12),
-    'Dark World Potion Shop': ShopData(0x010F, ShopType.Shop, 0xC1, True, False, _dark_world_shop_defaults, 15),
-    'Light World Death Mountain Shop': ShopData(0x00FF, ShopType.Shop, 0xA0, True, False, _basic_shop_defaults, 18),
-    'Kakariko Shop': ShopData(0x011F, ShopType.Shop, 0xA0, True, False, _basic_shop_defaults, 21),
-    'Cave Shop (Lake Hylia)': ShopData(0x0112, ShopType.Shop, 0xA0, True, False, _basic_shop_defaults, 24),
-    'Potion Shop': ShopData(0x0109, ShopType.Shop, 0xA0, True, True,
-                            [('Red Potion', 120), ('Green Potion', 60), ('Blue Potion', 160)], 27),
-    'Capacity Upgrade': ShopData(0x0115, ShopType.UpgradeShop, 0x04, True, True,
-                                 [('Bomb Upgrade (+5)', 100, 7), ('Arrow Upgrade (+5)', 100, 7)], 30)
-}
 
-total_shop_slots = len(shop_table) * 3
-total_dynamic_shop_slots = sum(3 for shopname, data in shop_table.items() if not data[4])  # data[4] -> locked
 
-SHOP_ID_START = 0x400000
-shop_table_by_location_id = dict(enumerate(
-    (f"{name} {Shop.slot_names[num]}" for name, shop_data in
-     sorted(shop_table.items(), key=lambda item: item[1].sram_offset)
-     for num in range(3)), start=SHOP_ID_START))
 
-shop_table_by_location_id[(SHOP_ID_START + total_shop_slots)] = "Old Man Sword Cave"
-shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 1)] = "Take-Any #1"
-shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 2)] = "Take-Any #2"
-shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 3)] = "Take-Any #3"
-shop_table_by_location_id[(SHOP_ID_START + total_shop_slots + 4)] = "Take-Any #4"
-shop_table_by_location = {y: x for x, y in shop_table_by_location_id.items()}
+
 
 shop_generation_types = {
     'arrows': [('Single Arrow', 5), ('Arrows (10)', 50)],
@@ -509,80 +328,3 @@ def shuffle_shops(world, items, player: int):
                 i += slots
 
 
-price_blacklist = {
-    ShopPriceType.Rupees: {'Rupees'},
-    ShopPriceType.Hearts: {'Small Heart', 'Apple'},
-    ShopPriceType.Magic: {'Magic Jar'},
-    ShopPriceType.Bombs: {'Bombs', 'Single Bomb'},
-    ShopPriceType.Arrows: {'Arrows', 'Single Arrow'},
-    ShopPriceType.HeartContainer: {},
-    ShopPriceType.BombUpgrade: {"Bomb Upgrade"},
-    ShopPriceType.ArrowUpgrade: {"Arrow Upgrade"},
-    ShopPriceType.Keys: {"Small Key"},
-    ShopPriceType.Potion: {},
-}
-
-price_chart = {
-    ShopPriceType.Rupees: lambda p: p,
-    ShopPriceType.Hearts: lambda p: min(5, p // 5) * 8, # Each heart is 0x8 in memory, Max of 5 hearts (20 total??)
-    ShopPriceType.Magic: lambda p: min(15, p // 5) * 8, # Each pip is 0x8 in memory, Max of 15 pips (16 total...)
-    ShopPriceType.Bombs: lambda p: max(1, min(10, p // 5)), # 10 Bombs max
-    ShopPriceType.Arrows: lambda p: max(1, min(30, p // 5)), # 30 Arrows Max
-    ShopPriceType.HeartContainer: lambda p: 0x8,
-    ShopPriceType.BombUpgrade: lambda p: 0x1,
-    ShopPriceType.ArrowUpgrade: lambda p: 0x1,
-    ShopPriceType.Keys: lambda p: min(3, (p // 100) + 1), # Max of 3 keys for a price
-    ShopPriceType.Potion: lambda p: (p // 5) % 5,
-}
-
-price_type_display_name = {
-    ShopPriceType.Rupees: "Rupees",
-    ShopPriceType.Hearts: "Hearts",
-    ShopPriceType.Bombs: "Bombs",
-    ShopPriceType.Arrows: "Arrows",
-    ShopPriceType.Keys: "Keys",
-}
-
-# price division
-price_rate_display = {
-    ShopPriceType.Hearts: 8,
-    ShopPriceType.Magic: 8,
-}
-
-# prices with no? logic requirements
-simple_price_types = [
-    ShopPriceType.Rupees,
-    ShopPriceType.Hearts,
-    ShopPriceType.Bombs,
-    ShopPriceType.Arrows,
-    ShopPriceType.Keys
-]
-
-
-def price_to_funny_price(item: dict, world, player: int):
-    """
-    Converts a raw Rupee price into a special price type
-    """
-    if item:
-        my_price_types = simple_price_types.copy()
-        world.random.shuffle(my_price_types)
-        for p_type in my_price_types:
-            # Ignore rupee prices, logic-based prices or Keys (if we're not on universal keys)
-            if p_type in [ShopPriceType.Rupees, ShopPriceType.BombUpgrade, ShopPriceType.ArrowUpgrade]:
-                return
-            # If we're using keys...
-            # Check if we're in universal, check if our replacement isn't a Small Key
-            # Check if price isn't super small... (this will ideally be handled in a future table)
-            if p_type in [ShopPriceType.Keys]:
-                if world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
-                    continue
-                elif item['replacement'] and 'Small Key' in item['replacement']:
-                    continue
-                if item['price'] < 50:
-                    continue
-            if any(x in item['item'] for x in price_blacklist[p_type]):
-                continue
-            else:
-                item['price'] = min(price_chart[p_type](item['price']) , 255)
-                item['price_type'] = p_type
-            break

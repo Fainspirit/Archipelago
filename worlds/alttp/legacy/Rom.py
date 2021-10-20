@@ -21,23 +21,25 @@ import bsdiff4
 from typing import Optional
 
 from BaseClasses import CollectionState, Region
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.Shops import ShopType, ShopPriceType
-from worlds.alttp_legacy.Dungeons import dungeon_music_addresses
-from worlds.alttp_legacy.Regions import location_table, old_location_address_to_new_location_address
-from worlds.alttp_legacy.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
-from worlds.alttp_legacy.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
+from worlds.alttp.generic.SubClasses import ALttPLocation
+from worlds.alttp.generic.shop import ShopPriceType
+from worlds.alttp.generic.shop_fill import ShopType
+from worlds.alttp.legacy.Dungeons import dungeon_music_addresses
+from worlds.alttp.generic.regions import location_table
+from worlds.alttp.generic.memory_address_tools import old_location_address_to_new_location_address
+from worlds.alttp.legacy.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
+from worlds.alttp.legacy.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
     Blind_texts, \
     BombShop2_texts, junk_texts
 
-from worlds.alttp_legacy.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
+from worlds.alttp.legacy.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
     DeathMountain_texts, \
     LostWoods_texts, WishingWell_texts, DesertPalace_texts, MountainTower_texts, LinksHouse_texts, Lumberjacks_texts, \
     SickKid_texts, FluteBoy_texts, Zora_texts, MagicShop_texts, Sahasrahla_names
 from Utils import local_path, int16_as_bytes, int32_as_bytes, snes_to_pc, is_frozen
-from worlds.alttp_legacy.Items import ItemFactory, item_table
-from worlds.alttp_legacy.EntranceShuffle import door_addresses
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp.legacy.Items import ItemFactory, item_table
+from worlds.alttp.entrance_randomizer.EntranceShuffle import door_addresses
+from worlds.alttp.standard.options import smallkey_shuffle
 import Patch
 
 try:
@@ -2109,7 +2111,7 @@ def write_strings(rom, world, player):
         if dest.player != player:
             if ped_hint:
                 hint += f" for {world.player_name[dest.player]}!"
-            elif type(dest) in [Region, ALttPLocationLegacy]:
+            elif type(dest) in [Region, ALttPLocation]:
                 hint += f" in {world.player_name[dest.player]}'s world"
             else:
                 hint += f" for {world.player_name[dest.player]}"
