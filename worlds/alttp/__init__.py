@@ -1,38 +1,47 @@
 import random
 import logging
-import os
 import threading
 import typing
 
+
+
+
 from BaseClasses import Item, CollectionState
-from .SubClasses import ALttPItemLegacy
+from .mode_handler import ModeHandler
+
 from ..AutoWorld import World, LogicMixin
-from .Options import alttp_options_legacy, smallkey_shuffle
-from .Items import as_dict_item_table, item_name_groups, item_table
-from .Regions import lookup_name_to_id, create_regions, mark_light_world_regions
-from .Rules import set_rules
-from .ItemPool import generate_itempool, difficulties
-from .Shops import create_shops, ShopSlotFill
-from .Dungeons import create_dungeons
-from .Rom import LocalRom, patch_rom, patch_race_rom, patch_enemizer, apply_rom_settings, get_hash_string, \
-    get_base_rom_path
-import Patch
 
-from .InvertedRegions import create_inverted_regions, mark_dark_world_regions
-from .EntranceShuffle import link_entrances, link_inverted_entrances, plando_connect
+from . import write_rom
 
-lttp_legacy_logger = logging.getLogger("A Link to the Past - Legacy")
+# Methods from before the refactor
+from .standard.options import options, smallkey_shuffle
+from .legacy.Items import as_dict_item_table, item_name_groups, item_table
+from worlds.alttp.generic.regions import lookup_name_to_id, create_regions, mark_light_world_regions
+from .legacy.Rules import set_rules
+from .legacy.ItemPool import generate_itempool, difficulties
+from .legacy.Dungeons import create_dungeons
+from .legacy.InvertedRegions import create_inverted_regions, mark_dark_world_regions
+
+from .generic.shop_fill import create_shops, ShopSlotFill
+from .generic.SubClasses import ALttPItem
+
+from .entrance_randomizer.EntranceShuffle import link_entrances, link_inverted_entrances, plando_connect
+
+lttp_logger = logging.getLogger("A Link to the Past")
 
 
-class ALTTPWorldLegacy(World):
+class ALTTPWorld(World):
     """
     The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
     Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
     dungeons on your quest to rescue the descendents of the seven wise men and defeat the evil
     Ganon!
     """
-    game: str = "A Link to the Past - Legacy"
-    options = alttp_options_legacy
+    game: str = "A Link to the Past"
+
+    # Based on settings, built options list
+    options = ModeHandler.build_options(True, True, False)
+
     topology_present = True
     item_name_groups = item_name_groups
     hint_blacklist = {"Triforce"}
@@ -53,7 +62,7 @@ class ALTTPWorldLegacy(World):
         self.dungeon_specific_item_names = set()
         self.rom_name_available_event = threading.Event()
         self.has_progressive_bows = False
-        super(ALTTPWorldLegacy, self).__init__(*args, **kwargs)
+        super(ALTTPWorld, self).__init__(*args, **kwargs)
 
     def generate_early(self):
         player = self.player
@@ -237,7 +246,7 @@ class ALTTPWorldLegacy(World):
                 world.random.shuffle(prize_locs)
                 fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
             except FillError as e:
-                lttp_legacy_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
+                lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
                                                 attempts - attempt)
                 for location in empty_crystal_locations:
                     location.item = None
@@ -248,7 +257,7 @@ class ALTTPWorldLegacy(World):
 
     @classmethod
     def stage_pre_fill(cls, world):
-        from .Dungeons import fill_dungeons_restrictive
+        from .legacy.Dungeons import fill_dungeons_restrictive
         fill_dungeons_restrictive(cls, world)
 
     @classmethod
@@ -256,62 +265,7 @@ class ALTTPWorldLegacy(World):
         ShopSlotFill(world)
 
     def generate_output(self, output_directory: str):
-        """Apply selected settings to the rom and save it in /output"""
-        world = self.world
-        player = self.player
-        try:
-            use_enemizer = (world.boss_shuffle[player] != 'none' or world.enemy_shuffle[player]
-                            or world.enemy_health[player] != 'default' or world.enemy_damage[player] != 'default'
-                            or world.pot_shuffle[player] or world.bush_shuffle[player]
-                            or world.killable_thieves[player])
-
-            rom = LocalRom(get_base_rom_path())
-
-            patch_rom(world, rom, player, use_enemizer)
-
-            if use_enemizer:
-                patch_enemizer(world, player, rom, world.enemizer, output_directory)
-
-            if world.is_race:
-                patch_race_rom(rom, world, player)
-
-            world.spoiler.hashes[player] = get_hash_string(rom.hash)
-
-            palettes_options = {
-                'dungeon': world.uw_palettes[player],
-                'overworld': world.ow_palettes[player],
-                'hud': world.hud_palettes[player],
-                'sword': world.sword_palettes[player],
-                'shield': world.shield_palettes[player],
-                'link': world.link_palettes[player]
-            }
-            palettes_options = {key: option.current_key for key, option in palettes_options.items()}
-
-            # User customization
-            apply_rom_settings(rom, world.heartbeep[player].current_key,
-                               world.heartcolor[player].current_key,
-                               world.quickswap[player],
-                               world.menuspeed[player].current_key,
-                               world.music[player],
-                               world.sprite[player],
-                               palettes_options, world, player, True,
-                               reduceflashing=world.reduceflashing[player] or world.is_race,
-                               triforcehud=world.triforcehud[player].current_key)
-
-            # Write modified ROM to disk
-            outfilepname = f'_P{player}'
-            outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
-                if world.player_name[player] != 'Player%d' % player else ''
-
-            rompath = os.path.join(output_directory, f'AP_{world.seed_name}{outfilepname}.sfc')
-            rom.write_to_file(rompath)
-            Patch.create_patch_file(rompath, player=player, player_name=world.player_name[player])
-            os.unlink(rompath)
-            self.rom_name = rom.name
-        except:
-            raise
-        finally:
-            self.rom_name_available_event.set() # make sure threading continues and errors are collected
+        return write_rom.write_rom(self, output_directory)
 
     def modify_multidata(self, multidata: dict):
         import base64
@@ -326,17 +280,17 @@ class ALTTPWorldLegacy(World):
             del (multidata["connect_names"][self.world.player_name[self.player]])
 
     def get_required_client_version(self) -> tuple:
-        return max((0, 1, 4), super(ALTTPWorldLegacy, self).get_required_client_version())
+        return max((0, 1, 4), super(ALTTPWorld, self).get_required_client_version())
 
     def create_item(self, name: str) -> Item:
-        return ALttPItemLegacy(name, self.player, **as_dict_item_table[name])
+        return ALttPItem(name, self.player, **as_dict_item_table[name])
 
     @classmethod
     def stage_fill_hook(cls, world, progitempool, nonexcludeditempool, localrestitempool, nonlocalrestitempool,
                         restitempool, fill_locations):
         trash_counts = {}
         standard_keyshuffle_players = set()
-        for player in world.get_game_players("A Link to the Past - Legacy"):
+        for player in world.get_game_players("A Link to the Past"):
             if world.mode[player] == 'standard' and world.smallkey_shuffle[player] \
                     and world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
                 standard_keyshuffle_players.add(player)
@@ -407,8 +361,8 @@ def get_same_seed(world, seed_def: tuple) -> str:
     return seeds[seed_def]
 
 
-class ALttPLogicLegacy(LogicMixin):
-    def _lttp_has_key_legacy(self, item, player, count: int = 1):
+class ALttPLogic(LogicMixin):
+    def _lttp_has_key(self, item, player, count: int = 1):
         if self.world.logic[player] == 'nologic':
             return True
         if self.world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:

@@ -4,26 +4,26 @@ from typing import Optional
 from BaseClasses import Location, Item
 
 
-class ALttPLocationLegacy(Location):
+class ALttPLocation(Location):
     game: str = "A Link to the Past"
 
     def __init__(self, player: int, name: str = '', address=None, crystal: bool = False,
                  hint_text: Optional[str] = None, parent=None,
                  player_address=None):
-        super(ALttPLocationLegacy, self).__init__(player, name, address, parent)
+        super(ALttPLocation, self).__init__(player, name, address, parent)
         self.crystal = crystal
         self.player_address = player_address
         self._hint_text: str = hint_text
 
 
-class ALttPItemLegacy(Item):
+class ALttPItem(Item):
     game: str = "A Link to the Past"
     dungeon = None
 
     def __init__(self, name, player, advancement=False, type=None, item_code=None, pedestal_hint=None,
                  pedestal_credit=None, sick_kid_credit=None, zora_credit=None, witch_credit=None,
                  flute_boy_credit=None, hint_text=None, trap=False):
-        super(ALttPItemLegacy, self).__init__(name, advancement, item_code, player)
+        super(ALttPItem, self).__init__(name, advancement, item_code, player)
         self.type = type
         self._pedestal_hint_text = pedestal_hint
         self.pedestal_credit_text = pedestal_credit

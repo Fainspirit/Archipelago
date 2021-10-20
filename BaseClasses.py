@@ -1190,7 +1190,9 @@ class Spoiler():
             try:
                 outfile.write(f'{displayname + ":":33}{res.get_current_option_name()}\n')
             except:
-                raise Exception
+                # TODO: make this work right for new lttp options ? IDK how and this makes it not crash so
+                outfile.write(f'{displayname + ":":33}[ERROR]\n')
+                #raise Exception
 
         with open(filename, 'w', encoding="utf-8-sig") as outfile:
             outfile.write(
@@ -1212,6 +1214,7 @@ class Spoiler():
                     for f_option, option in options.items():
                         write_option(f_option, option)
 
+                # aLttP specific spoiler lines
                 if player in self.world.get_game_players("A Link to the Past"):
                     outfile.write('%s%s\n' % ('Hash: ', self.hashes[player]))
 

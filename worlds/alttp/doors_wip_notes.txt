@@ -1,3 +1,5 @@
+19 Oct 21 - 4.45s for 3p
+
 ------------------
 CONFUSION
 ------------------
@@ -76,3 +78,7 @@ change triforce pieces from advancement to never exclude ?
 Need to 
 
 Regions.py for a new world
+
+split regions into memory addresses and standard groupings
+
+write options in base classes spoiler

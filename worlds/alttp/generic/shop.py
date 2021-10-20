@@ -3,10 +3,10 @@ from enum import unique, IntEnum
 from typing import List, Optional, Set, NamedTuple, Dict
 import logging
 
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.EntranceShuffle import door_addresses
-from worlds.alttp_legacy.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp.generic.SubClasses import ALttPLocation
+from worlds.alttp.entrance_randomizer.EntranceShuffle import door_addresses
+from worlds.alttp.legacy.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
+from worlds.alttp.standard.options import smallkey_shuffle
 from Utils import int16_as_bytes
 
 logger = logging.getLogger("Shops")
@@ -157,7 +157,7 @@ shop_class_mapping = {ShopType.UpgradeShop: UpgradeShop,
 
 
 def FillDisabledShopSlots(world):
-    shop_slots: Set[ALttPLocationLegacy] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations
                                       if location.shop_slot is not None and location.shop_slot_disabled}
     for location in shop_slots:
@@ -168,7 +168,7 @@ def FillDisabledShopSlots(world):
 
 
 def ShopSlotFill(world):
-    shop_slots: Set[ALttPLocationLegacy] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations if location.shop_slot is not None}
     removed = set()
     for location in shop_slots:
@@ -313,7 +313,7 @@ def create_shops(world, player: int):
             shop.add_inventory(index, *item)
             if not locked and num_slots:
                 slot_name = f"{region.name} {shop.slot_names[index]}"
-                loc = ALttPLocationLegacy(player, slot_name, address=shop_table_by_location[slot_name],
+                loc = ALttPLocation(player, slot_name, address=shop_table_by_location[slot_name],
                                     parent=region, hint_text="for sale")
                 loc.shop_slot = index
                 loc.locked = True
@@ -583,6 +583,6 @@ def price_to_funny_price(item: dict, world, player: int):
             if any(x in item['item'] for x in price_blacklist[p_type]):
                 continue
             else:
-                item['price'] = min(price_chart[p_type](item['price']), 255)
+                item['price'] = min(price_chart[p_type](item['price']) , 255)
                 item['price_type'] = p_type
             break

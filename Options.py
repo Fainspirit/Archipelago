@@ -12,6 +12,7 @@ class AssembleOptions(type):
             if getattr(base, "options", None):
                 options.update(base.options)
                 name_lookup.update(base.name_lookup)
+        # This doesn't seem to ever match
         new_options = {name[7:].lower(): option_id for name, option_id in attrs.items() if
                        name.startswith("option_")}
         if "random" in new_options:

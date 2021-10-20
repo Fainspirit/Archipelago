@@ -1,5 +1,5 @@
+"""Standard options"""
 import typing
-import random
 
 from Options import Choice, Range, Option, Toggle, DefaultOnToggle
 
@@ -262,7 +262,7 @@ class TriforceHud(Choice):
     option_hide_both = 3
 
 
-alttp_options_legacy: typing.Dict[str, type(Option)] = {
+options: typing.Dict[str, type(Option)] = {
     "crystals_needed_for_gt": CrystalsTower,
     "crystals_needed_for_ganon": CrystalsGanon,
     "bigkey_shuffle": bigkey_shuffle,
