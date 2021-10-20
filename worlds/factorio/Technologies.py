@@ -87,7 +87,7 @@ class CustomTechnology(Technology):
         military_allowed = "military-science-pack" in allowed_packs \
                            and (ingredients & {"chemical-science-pack", "production-science-pack", "utility-science-pack"})
         self.player = player
-        if origin.name not in world.worlds[player].static_nodes:
+        if origin.name not in world.autoworlds[player].static_nodes:
             if military_allowed:
                 ingredients.add("military-science-pack")
             ingredients = list(ingredients)

@@ -77,7 +77,10 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     world.plando_connections = args.plando_connections.copy()
     world.required_medallions = args.required_medallions.copy()
     world.game = args.game.copy()
+
+    # Leave this one!
     world.set_options(args)
+
     world.player_name = args.name.copy()
     world.enemizer = args.enemizercli
     world.sprite = args.sprite.copy()
@@ -174,7 +177,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             output_file_futures = [pool.submit(AutoWorld.call_stage, world, "generate_output", temp_dir)]
             for player in world.player_ids:
                 # skip starting a thread for methods that say "pass".
-                if AutoWorld.World.generate_output.__code__ is not world.worlds[player].generate_output.__code__:
+                if AutoWorld.World.generate_output.__code__ is not world.autoworlds[player].generate_output.__code__:
                     output_file_futures.append(
                         pool.submit(AutoWorld.call_single, world, "generate_output", player, temp_dir))
 
@@ -251,7 +254,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                 minimum_versions = {"server": (0, 1, 1), "clients": client_versions}
                 games = {}
                 for slot in world.player_ids:
-                    client_versions[slot] = world.worlds[slot].get_required_client_version()
+                    client_versions[slot] = world.autoworlds[slot].get_required_client_version()
                     games[slot] = world.game[slot]
                 precollected_items = {player: [item.code for item in world_precollected]
                                       for player, world_precollected in world.precollected_items.items()}
@@ -260,8 +263,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                 sending_visible_players = set()
 
                 for slot in world.player_ids:
-                    slot_data[slot] = world.worlds[slot].fill_slot_data()
-                    if world.worlds[slot].sending_visible:
+                    slot_data[slot] = world.autoworlds[slot].fill_slot_data()
+                    if world.autoworlds[slot].sending_visible:
                         sending_visible_players.add(slot)
 
                 def precollect_hint(location):
@@ -289,9 +292,9 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                     "names": [[name for player, name in sorted(world.player_name.items())]],
                     "connect_names": {name: (0, player) for player, name in world.player_name.items()},
                     "remote_items": {player for player in world.player_ids if
-                                     world.worlds[player].remote_items},
+                                     world.autoworlds[player].remote_items},
                     "remote_start_inventory": {player for player in world.player_ids if
-                                               world.worlds[player].remote_start_inventory},
+                                               world.autoworlds[player].remote_start_inventory},
                     "locations": locations_data,
                     "checks_in_area": checks_in_area,
                     "server_options": baked_server_options,
@@ -452,7 +455,7 @@ def create_playthrough(world):
         return list(pathpairs)
 
     world.spoiler.paths = {}
-    topology_worlds = (player for player in world.player_ids if world.worlds[player].topology_present)
+    topology_worlds = (player for player in world.player_ids if world.autoworlds[player].topology_present)
     for player in topology_worlds:
         world.spoiler.paths.update(
             {str(location): get_path(state, location.parent_region) for sphere in collection_spheres for location in

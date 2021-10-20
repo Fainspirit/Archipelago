@@ -39,14 +39,14 @@ class AutoLogicRegister(type):
 
 
 def call_single(world: MultiWorld, method_name: str, player: int, *args):
-    method = getattr(world.worlds[player], method_name)
+    method = getattr(world.autoworlds[player], method_name)
     return method(*args)
 
 
 def call_all(world: MultiWorld, method_name: str, *args):
     world_types = set()
     for player in world.player_ids:
-        world_types.add(world.worlds[player].__class__)
+        world_types.add(world.autoworlds[player].__class__)
         call_single(world, method_name, player, *args)
 
     for world_type in world_types:
@@ -56,7 +56,7 @@ def call_all(world: MultiWorld, method_name: str, *args):
 
 
 def call_stage(world: MultiWorld, method_name: str, *args):
-    world_types = {world.worlds[player].__class__ for player in world.player_ids}
+    world_types = {world.autoworlds[player].__class__ for player in world.player_ids}
     for world_type in world_types:
         stage_callable = getattr(world_type, f"stage_{method_name}", None)
         if stage_callable:

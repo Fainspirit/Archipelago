@@ -349,7 +349,7 @@ def distribute_planned(world: MultiWorld):
                     placement.warn(
                         f"Can't place '{placement.item}' at '{placement.location}', as key drop shuffle locations are not supported yet.")
                     continue
-                item = world.worlds[player].create_item(placement.item)
+                item = world.autoworlds[player].create_item(placement.item)
                 target_world: int = placement.world
                 if target_world is False or world.players == 1:
                     target_world = player  # in own world

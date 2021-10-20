@@ -29,7 +29,7 @@ class TestMinecraft(TestBase):
     def setUp(self):
         self.world = MultiWorld(1)
         self.world.game[1] = "Minecraft"
-        self.world.worlds[1] = MinecraftWorld(self.world, 1)
+        self.world.autoworlds[1] = MinecraftWorld(self.world, 1)
         exclusion_pools = ['hard', 'insane', 'postgame']
         for pool in exclusion_pools:
             setattr(self.world, f"include_{pool}_advancements", [False, False])

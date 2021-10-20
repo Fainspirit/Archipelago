@@ -13,7 +13,7 @@ class ModeHandler:
 
     @classmethod
     def build_options(cls, er: bool = False, doors: bool = False, replace_existing = False):
-        """Aggregate the options provided in the world's submodules"""
+        """Aggregate the options provided in the world's enabled submodules"""
 
         all_opts = {}
 

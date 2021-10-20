@@ -24,7 +24,7 @@ class OOTLogic(LogicMixin):
 
     # Used for fall damage and other situations where damage is unavoidable
     def _oot_can_live_dmg(self, player, hearts):
-        mult = self.world.worlds[player].damage_multiplier
+        mult = self.world.autoworlds[player].damage_multiplier
         if hearts*4 >= 3:
             return mult != 'ohko' and mult != 'quadruple'
         else:
