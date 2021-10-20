@@ -82,3 +82,5 @@ Regions.py for a new world
 split regions into memory addresses and standard groupings
 
 write options in base classes spoiler
+
+getattr(autoworld: Object, option_name: str, default_value)

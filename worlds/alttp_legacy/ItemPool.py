@@ -355,7 +355,7 @@ def generate_itempool(world):
 
     items = ItemFactory(pool, player)
     # convert one Progressive Bow into Progressive Bow (Alt), in ID only, for ganon silvers hint text
-    if world.worlds[player].has_progressive_bows:
+    if world.autoworlds[player].has_progressive_bows:
         for item in items:
             if item.code == 0x64:  # Progressive Bow
                 item.code = 0x65  # Progressive Bow (Alt)
@@ -370,7 +370,7 @@ def generate_itempool(world):
         world.treasure_hunt_icon[player] = treasure_hunt_icon
 
     dungeon_items = [item for item in get_dungeon_item_pool_player(world, player)
-                     if item.name not in world.worlds[player].dungeon_local_item_names]
+                     if item.name not in world.autoworlds[player].dungeon_local_item_names]
 
     if world.goal[player] == 'icerodhunt':
         for item in dungeon_items:
@@ -590,7 +590,7 @@ def get_pool_core(world, player: int):
 
     if want_progressives(world.random):
         pool.extend(diff.progressivebow)
-        world.worlds[player].has_progressive_bows = True
+        world.autoworlds[player].has_progressive_bows = True
     elif (swordless or logic == 'noglitches') and goal != 'icerodhunt':
         swordless_bows = ['Bow', 'Silver Bow']
         if difficulty == "easy":

@@ -782,7 +782,7 @@ def patch_rom(world, rom, player, enemized):
                             itemid = 0x33
                         elif location.item.compass:
                             itemid = 0x25
-                if world.worlds[player].remote_items:  # remote items does not currently work
+                if world.autoworlds[player].remote_items:  # remote items does not currently work
                     itemid = list(location_table.keys()).index(location.name) + 1
                     assert itemid < 0x100
                     rom.write_byte(location.player_address, 0xFF)
@@ -1643,7 +1643,7 @@ def patch_rom(world, rom, player, enemized):
     write_strings(rom, world, player)
 
     # remote items flag, does not currently work
-    rom.write_byte(0x18637C, int(world.worlds[player].remote_items))
+    rom.write_byte(0x18637C, int(world.autoworlds[player].remote_items))
 
     # set rom name
     # 21 bytes
@@ -2298,7 +2298,7 @@ def write_strings(rom, world, player):
             ' %s?' % hint_text(silverarrows[0]).replace('Ganon\'s', 'my')) if silverarrows else '?\nI think not!'
     tt['ganon_phase_3_no_silvers'] = 'Did you find the silver arrows%s' % silverarrow_hint
     tt['ganon_phase_3_no_silvers_alt'] = 'Did you find the silver arrows%s' % silverarrow_hint
-    if world.worlds[player].has_progressive_bows and (world.difficulty_requirements[player].progressive_bow_limit >= 2 or (
+    if world.autoworlds[player].has_progressive_bows and (world.difficulty_requirements[player].progressive_bow_limit >= 2 or (
             world.swordless[player] or world.logic[player] == 'noglitches')):
         prog_bow_locs = world.find_items('Progressive Bow', player)
         world.slot_seeds[player].shuffle(prog_bow_locs)

@@ -10,7 +10,7 @@ class TestVanilla(TestBase):
     def setUp(self):
         self.world = MultiWorld(1)
         self.world.game[1] = "Hollow Knight"
-        self.world.worlds[1] = HKWorld(self.world, 1)
+        self.world.autoworlds[1] = HKWorld(self.world, 1)
         for hk_option in hollow_knight_randomize_options:
             setattr(self.world, hk_option, {1: True})
         for hk_option, option in hollow_knight_skip_options.items():

@@ -737,9 +737,9 @@ class OOTWorld(World):
             items_by_region = {}
             for player in barren_hint_players:
                 items_by_region[player] = {}
-                for r in world.worlds[player].regions:
+                for r in world.autoworlds[player].regions:
                     items_by_region[player][r.hint_text] = {'dungeon': False, 'weight': 0, 'is_barren': True}
-                for d in world.worlds[player].dungeons:
+                for d in world.autoworlds[player].dungeons:
                     items_by_region[player][d.hint_text] = {'dungeon': True, 'weight': 0, 'is_barren': True}
                 del (items_by_region[player]["Link's Pocket"])
                 del (items_by_region[player][None])
@@ -747,9 +747,9 @@ class OOTWorld(World):
             if item_hint_players:  # loop once over all locations to gather major items. Check oot locations for barren/woth if needed
                 for loc in world.get_locations():
                     player = loc.item.player
-                    autoworld = world.worlds[player]
+                    autoworld = world.autoworlds[player]
                     if ((player in item_hint_players and (autoworld.is_major_item(loc.item) or loc.item.name in autoworld.item_added_hint_types['item'])) 
-                                or (loc.player in item_hint_players and loc.name in world.worlds[loc.player].added_hint_types['item'])):
+                                or (loc.player in item_hint_players and loc.name in world.autoworlds[loc.player].added_hint_types['item'])):
                         autoworld.major_item_locations.append(loc)
 
                     if loc.game == "Ocarina of Time" and loc.item.code and (not loc.locked or loc.item.type == 'Song'):
@@ -763,10 +763,10 @@ class OOTWorld(World):
                             state = CollectionState(world)
                             state.locations_checked.add(loc)
                             if not world.can_beat_game(state):
-                                world.worlds[loc.player].required_locations.append(loc)
+                                world.autoworlds[loc.player].required_locations.append(loc)
             elif barren_hint_players or woth_hint_players:  # Check only relevant oot locations for barren/woth
                 for player in (barren_hint_players | woth_hint_players):
-                    for loc in world.worlds[player].get_locations():
+                    for loc in world.autoworlds[player].get_locations():
                         if loc.item.code and (not loc.locked or loc.item.type == 'Song'):
                             if player in barren_hint_players:
                                 hint_area = get_hint_area(loc)
@@ -777,9 +777,9 @@ class OOTWorld(World):
                                 state = CollectionState(world)
                                 state.locations_checked.add(loc)
                                 if not world.can_beat_game(state):
-                                    world.worlds[player].required_locations.append(loc)
+                                    world.autoworlds[player].required_locations.append(loc)
             for player in barren_hint_players:
-                world.worlds[player].empty_areas = {region: info for (region, info) in items_by_region[player].items() if info['is_barren']}
+                world.autoworlds[player].empty_areas = {region: info for (region, info) in items_by_region[player].items() if info['is_barren']}
         except Exception as e:
             raise e
         finally:

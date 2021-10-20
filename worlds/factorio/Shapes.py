@@ -17,7 +17,7 @@ def get_shapes(factorio_world) -> Dict[str, List[str]]:
     prerequisites: Dict[str, Set[str]] = {}
     layout = world.tech_tree_layout[player].value
     custom_technologies = factorio_world.custom_technologies
-    tech_names: List[str] = list(set(custom_technologies) - world.worlds[player].static_nodes)
+    tech_names: List[str] = list(set(custom_technologies) - world.autoworlds[player].static_nodes)
     tech_names.sort()
     world.random.shuffle(tech_names)
 

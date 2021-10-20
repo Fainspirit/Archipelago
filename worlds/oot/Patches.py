@@ -1679,7 +1679,7 @@ def patch_rom(world, rom):
                 pass
             elif dungeon in ['Bottom of the Well', 'Ice Cavern']:
                 dungeon_name, boss_name, compass_id, map_id = dungeon_list[dungeon]
-                if len(world.world.worlds) > 1:
+                if len(world.world.autoworlds) > 1:
                     map_message = "\x13\x76\x08\x05\x42\x0F\x05\x40 found the \x05\x41Dungeon Map\x05\x40\x01for %s\x05\x40!\x09" % (dungeon_name)
                 else:
                     map_message = "\x13\x76\x08You found the \x05\x41Dungeon Map\x05\x40\x01for %s\x05\x40!\x01It\'s %s!\x09" % (dungeon_name, "masterful" if world.dungeon_mq[dungeon] else "ordinary")
@@ -1689,13 +1689,13 @@ def patch_rom(world, rom):
             else:
                 dungeon_name, boss_name, compass_id, map_id = dungeon_list[dungeon]
                 dungeon_reward = reward_list[world.get_location(boss_name).item.name]
-                if len(world.world.worlds) > 1:
+                if len(world.world.autoworlds) > 1:
                     compass_message = "\x13\x75\x08\x05\x42\x0F\x05\x40 found the \x05\x41Compass\x05\x40\x01for %s\x05\x40!\x09" % (dungeon_name)
                 else:
                     compass_message = "\x13\x75\x08You found the \x05\x41Compass\x05\x40\x01for %s\x05\x40!\x01It holds the %s!\x09" % (dungeon_name, dungeon_reward)
                 update_message_by_id(messages, compass_id, compass_message)
                 if world.mq_dungeons_random or world.mq_dungeons != 0 and world.mq_dungeons != 12:
-                    if len(world.world.worlds) > 1:
+                    if len(world.world.autoworlds) > 1:
                         map_message = "\x13\x76\x08\x05\x42\x0F\x05\x40 found the \x05\x41Dungeon Map\x05\x40\x01for %s\x05\x40!\x09" % (dungeon_name)
                     else:
                         map_message = "\x13\x76\x08You found the \x05\x41Dungeon Map\x05\x40\x01for %s\x05\x40!\x01It\'s %s!\x09" % (dungeon_name, "masterful" if world.dungeon_mq[dungeon] else "ordinary")
@@ -1723,7 +1723,7 @@ def patch_rom(world, rom):
     rom.write_int16(0xB6D57E, 0x0003)
     rom.write_int16(0xB6EC52, 999)
     tycoon_message = "\x08\x13\x57You got a \x05\x43Tycoon's Wallet\x05\x40!\x01Now you can hold\x01up to \x05\x46999\x05\x40 \x05\x46Rupees\x05\x40."
-    if len(world.world.worlds) > 1:
+    if len(world.world.autoworlds) > 1:
        tycoon_message = make_player_message(tycoon_message)
     update_message_by_id(messages, 0x00F8, tycoon_message, 0x23)
 
@@ -2116,7 +2116,7 @@ def place_shop_items(rom, world, shop_items, messages, locations, init_shop_id=F
                 if location.item.name == 'Ice Trap':
                     split_item_name[0] = create_fake_name(split_item_name[0])
 
-                if len(world.world.worlds) > 1: # OOTWorld.MultiWorld.AutoWorld[]
+                if len(world.world.autoworlds) > 1: # OOTWorld.MultiWorld.AutoWorld[]
                     description_text = '\x08\x05\x41%s  %d Rupees\x01%s\x01\x05\x42%s\x05\x40\x01Special deal! ONE LEFT!\x09\x0A\x02' % (split_item_name[0], location.price, split_item_name[1], world.world.get_player_name(location.item.player))
                 else:
                     description_text = '\x08\x05\x41%s  %d Rupees\x01%s\x01\x05\x40Special deal! ONE LEFT!\x01Get it while it lasts!\x09\x0A\x02' % (split_item_name[0], location.price, split_item_name[1])
@@ -2130,7 +2130,7 @@ def place_shop_items(rom, world, shop_items, messages, locations, init_shop_id=F
                 if location.item.name == 'Ice Trap':
                     shop_item_name = create_fake_name(shop_item_name)
 
-                if len(world.world.worlds) > 1:
+                if len(world.world.autoworlds) > 1:
                     shop_item_name = ''.join(filter(lambda char: char in character_table, shop_item_name))
                     do_line_break = sum(character_table[char] for char in f"{shop_item_name}  {location.price} Rupees") > NORMAL_LINE_WIDTH
                     description_text = '\x08\x05\x41%s%s%d Rupees\x01\x05\x42%s\x05\x40\x01Special deal! ONE LEFT!\x09\x0A\x02' % (shop_item_name, '\x01' if do_line_break else '  ', location.price, world.world.get_player_name(location.item.player))

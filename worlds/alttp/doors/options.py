@@ -8,9 +8,9 @@ class DoorsDummy(Choice):
     """Description"""
     displayname = "Doors Dummy"
 
-    c0 = 0
-    c1 = 1
-    c2 = 2
+    option_0 = 0
+    option_1 = 1
+    option_2 = 2
 
 
 options: typing.Dict[str, type(Option)] = {

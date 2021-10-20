@@ -25,7 +25,7 @@ class MultiWorld():
     plando_texts: List[Dict[str, str]]
     plando_items: List
     plando_connections: List
-    worlds: Dict[int, Any]
+    autoworlds: Dict[int, Any]
     is_race: bool = False
     precollected_items: Dict[int, List[Item]]
 
@@ -126,7 +126,7 @@ class MultiWorld():
             set_player_attr('game', "A Link to the Past")
             set_player_attr('completion_condition', lambda state: True)
         self.custom_data = {}
-        self.worlds = {}
+        self.autoworlds = {}
         self.slot_seeds = {}
 
     def set_seed(self, seed: Optional[int] = None, secure: bool = False, name: Optional[str] = None):
@@ -150,7 +150,7 @@ class MultiWorld():
                 setattr(self, option_key, getattr(args, option_key, {}))
             for option_key in Options.per_game_common_options:
                 setattr(self, option_key, getattr(args, option_key, {}))
-            self.worlds[player] = world_type(self, player)
+            self.autoworlds[player] = world_type(self, player)
 
     # intended for unittests
     def set_default_common_options(self):
@@ -173,7 +173,7 @@ class MultiWorld():
 
     @functools.lru_cache()
     def get_game_worlds(self, game_name: str):
-        return tuple(world for player, world in self.worlds.items() if self.game[player] == game_name)
+        return tuple(world for player, world in self.autoworlds.items() if self.game[player] == game_name)
 
     def get_name_string_for_object(self, obj) -> str:
         return obj.name if self.players == 1 else f'{obj.name} ({self.get_player_name(obj.player)})'
@@ -239,10 +239,10 @@ class MultiWorld():
         ret = CollectionState(self)
 
         for item in self.itempool:
-            self.worlds[item.player].collect(ret, item)
+            self.autoworlds[item.player].collect(ret, item)
         from worlds.alttp_legacy.Dungeons import get_dungeon_item_pool
         for item in get_dungeon_item_pool(self):
-            subworld = self.worlds[item.player]
+            subworld = self.autoworlds[item.player]
             if item.name in subworld.dungeon_local_item_names:
                 subworld.collect(ret, item)
         ret.sweep_for_events()
@@ -263,7 +263,7 @@ class MultiWorld():
                     location.item and location.item.name == item and location.item.player == player)
 
     def create_item(self, item_name: str, player: int) -> Item:
-        return self.worlds[player].create_item(item_name)
+        return self.autoworlds[player].create_item(item_name)
 
     def push_precollected(self, item: Item):
         item.world = self
@@ -561,7 +561,7 @@ class CollectionState(object):
 
     def has_group(self, item_name_group: str, player: int, count: int = 1):
         found: int = 0
-        for item_name in self.world.worlds[player].item_name_groups[item_name_group]:
+        for item_name in self.world.autoworlds[player].item_name_groups[item_name_group]:
             found += self.prog_items[item_name, player]
             if found >= count:
                 return True
@@ -569,7 +569,7 @@ class CollectionState(object):
 
     def count_group(self, item_name_group: str, player: int):
         found: int = 0
-        for item_name in self.world.worlds[player].item_name_groups[item_name_group]:
+        for item_name in self.world.autoworlds[player].item_name_groups[item_name_group]:
             found += self.prog_items[item_name, player]
         return found
 
@@ -740,7 +740,7 @@ class CollectionState(object):
         if location:
             self.locations_checked.add(location)
 
-        changed = self.world.worlds[item.player].collect(self, item)
+        changed = self.world.autoworlds[item.player].collect(self, item)
 
         if not changed and event:
             self.prog_items[item.name, item.player] += 1
@@ -754,7 +754,7 @@ class CollectionState(object):
         return changed
 
     def remove(self, item):
-        changed = self.world.worlds[item.player].remove(self, item)
+        changed = self.world.autoworlds[item.player].remove(self, item)
         if changed:
             # invalidate caches, nothing can be trusted anymore now
             self.reachable_regions[item.player] = set()
@@ -1190,9 +1190,7 @@ class Spoiler():
             try:
                 outfile.write(f'{displayname + ":":33}{res.get_current_option_name()}\n')
             except:
-                # TODO: make this work right for new lttp options ? IDK how and this makes it not crash so
-                outfile.write(f'{displayname + ":":33}[ERROR]\n')
-                #raise Exception
+                raise Exception
 
         with open(filename, 'w', encoding="utf-8-sig") as outfile:
             outfile.write(
@@ -1209,7 +1207,7 @@ class Spoiler():
                     write_option(f_option, option)
                 for f_option, option in Options.per_game_common_options.items():
                     write_option(f_option, option)
-                options = self.world.worlds[player].options
+                options = self.world.autoworlds[player].options
                 if options:
                     for f_option, option in options.items():
                         write_option(f_option, option)
@@ -1231,7 +1229,7 @@ class Spoiler():
                     outfile.write('Item Functionality:              %s\n' % self.world.item_functionality[player])
                     outfile.write('Entrance Shuffle:                %s\n' % self.world.shuffle[player])
                     if self.world.shuffle[player] != "vanilla":
-                        outfile.write('Entrance Shuffle Seed            %s\n' % self.world.worlds[player].er_seed)
+                        outfile.write('Entrance Shuffle Seed            %s\n' % self.world.autoworlds[player].er_seed)
                     outfile.write('Pyramid hole pre-opened:         %s\n' % (
                         'Yes' if self.world.open_pyramid[player] else 'No'))
                     outfile.write('Shop inventory shuffle:          %s\n' %
@@ -1268,7 +1266,7 @@ class Spoiler():
                 outfile.write('\n\nRecipes:\n')
                 for player in factorio_players:
                     name = self.world.get_player_name(player)
-                    for recipe in self.world.worlds[player].custom_recipes.values():
+                    for recipe in self.world.autoworlds[player].custom_recipes.values():
                         outfile.write(f"\n{recipe.name} ({name}): {recipe.ingredients} -> {recipe.products}")
 
             outfile.write('\n\nLocations:\n\n')
