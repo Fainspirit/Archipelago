@@ -12,15 +12,15 @@ import ModuleUpdate
 
 ModuleUpdate.update()
 
-from worlds.alttp import Options as LttPOptions
+from worlds.alttp_legacy import Options as LttPOptions
 from worlds.generic import PlandoItem, PlandoConnection
 from Utils import parse_yaml, version_tuple, __version__, tuplize_version, get_options
-from worlds.alttp.EntranceRandomizer import parse_arguments
+from worlds.alttp_legacy.EntranceRandomizer import parse_arguments
 from Main import main as ERmain
 from BaseClasses import seeddigits, get_seed
 import Options
-from worlds.alttp import Bosses
-from worlds.alttp.Text import TextTable
+from worlds.alttp_legacy import Bosses
+from worlds.alttp_legacy.Text import TextTable
 from worlds.AutoWorld import AutoWorldRegister
 
 categories = set(AutoWorldRegister.world_types)

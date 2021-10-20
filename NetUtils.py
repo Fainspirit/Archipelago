@@ -194,7 +194,7 @@ class JSONtoTextParser(metaclass=HandlerMeta):
 
     def _handle_item_name(self, node: JSONMessagePart):
         # todo: use a better info source
-        from worlds.alttp.Items import progression_items
+        from worlds.alttp_legacy.Items import progression_items
         node["color"] = 'green' if node.get("found", False) else 'cyan'
         if node["text"] in progression_items:
             node["color"] += ";white_bg"

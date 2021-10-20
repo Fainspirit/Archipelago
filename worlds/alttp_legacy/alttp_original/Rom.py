@@ -5,7 +5,6 @@ from Patch import read_rom
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
 RANDOMIZERBASEHASH = 'e397fef0e947d1bd760c68c4fe99a600'
-ROM_PLAYER_LIMIT = 255
 
 import io
 import json
@@ -22,23 +21,23 @@ import bsdiff4
 from typing import Optional
 
 from BaseClasses import CollectionState, Region
-from worlds.alttp.SubClasses import ALttPLocation
-from worlds.alttp.Shops import ShopType, ShopPriceType
-from worlds.alttp.Dungeons import dungeon_music_addresses
-from worlds.alttp.Regions import location_table, old_location_address_to_new_location_address
-from worlds.alttp.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
-from worlds.alttp.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
+from worlds.alttp_legacy.SubClasses import ALttPLocation
+from worlds.alttp_legacy.Shops import ShopType, ShopPriceType
+from worlds.alttp_legacy.Dungeons import dungeon_music_addresses
+from worlds.alttp_legacy.Regions import location_table, old_location_address_to_new_location_address
+from worlds.alttp_legacy.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
+from worlds.alttp_legacy.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
     Blind_texts, \
     BombShop2_texts, junk_texts
 
-from worlds.alttp.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
+from worlds.alttp_legacy.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
     DeathMountain_texts, \
     LostWoods_texts, WishingWell_texts, DesertPalace_texts, MountainTower_texts, LinksHouse_texts, Lumberjacks_texts, \
     SickKid_texts, FluteBoy_texts, Zora_texts, MagicShop_texts, Sahasrahla_names
 from Utils import local_path, int16_as_bytes, int32_as_bytes, snes_to_pc, is_frozen
-from worlds.alttp.Items import ItemFactory, item_table
-from worlds.alttp.EntranceShuffle import door_addresses
-from worlds.alttp.Options import smallkey_shuffle
+from worlds.alttp_legacy.Items import ItemFactory, item_table
+from worlds.alttp_legacy.EntranceShuffle import door_addresses
+from worlds.alttp_legacy.Options import smallkey_shuffle
 import Patch
 
 try:
@@ -788,7 +787,7 @@ def patch_rom(world, rom, player, enemized):
                     rom.write_byte(location.player_address, 0xFF)
                 elif location.item.player != player:
                     if location.player_address is not None:
-                        rom.write_byte(location.player_address, min(location.item.player, ROM_PLAYER_LIMIT))
+                        rom.write_byte(location.player_address, location.item.player)
                     else:
                         itemid = 0x5A
             location_address = old_location_address_to_new_location_address.get(location.address, location.address)
@@ -1654,10 +1653,8 @@ def patch_rom(world, rom, player, enemized):
     rom.write_bytes(0x7FC0, rom.name)
 
     # set player names
-    for p in range(1, min(world.players, ROM_PLAYER_LIMIT) + 1):
+    for p in range(1, min(world.players, 255) + 1):
         rom.write_bytes(0x195FFC + ((p - 1) * 32), hud_format_text(world.player_name[p]))
-    if world.players > ROM_PLAYER_LIMIT:
-        rom.write_bytes(0x195FFC + ((ROM_PLAYER_LIMIT - 1) * 32), hud_format_text("Archipelago"))
 
     # Write title screen Code
     hashint = int(rom.get_hash(), 16)
@@ -1734,7 +1731,7 @@ def write_custom_shops(rom, world, player):
 
             item_data = [shop_id, item_code] + price_data + \
                         [item['max'], ItemFactory(item['replacement'], player).code if item['replacement'] else 0xFF] + \
-                        replacement_price_data + [0 if item['player'] == player else min(ROM_PLAYER_LIMIT, item['player'])]
+                        replacement_price_data + [0 if item['player'] == player else item['player']]
             items_data.extend(item_data)
 
     rom.write_bytes(0x184800, shop_data)

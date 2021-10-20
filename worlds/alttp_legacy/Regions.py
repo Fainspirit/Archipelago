@@ -322,7 +322,7 @@ def create_dungeon_region(player: int, name: str, hint: str, locations=None, exi
 
 
 def _create_region(player: int, name: str, type: RegionType, hint: str, locations=None, exits=None):
-    from worlds.alttp.SubClasses import ALttPLocation
+    from worlds.alttp_legacy.SubClasses import ALttPLocation
     ret = Region(name, type, hint, player)
     if locations is None:
         locations = []
@@ -674,7 +674,7 @@ location_table: typing.Dict[str,
      'Turtle Rock - Prize': (
          [0x120A7, 0x53F24, 0x53F25, 0x18005C, 0x180079, 0xC708], None, True, 'Turtle Rock')}
 
-from worlds.alttp.Shops import shop_table_by_location_id, shop_table_by_location
+from worlds.alttp_legacy.Shops import shop_table_by_location_id, shop_table_by_location
 lookup_id_to_name = {data[0]: name for name, data in location_table.items() if type(data[0]) == int}
 lookup_id_to_name = {**lookup_id_to_name, **{data[1]: name for name, data in key_drop_data.items()}}
 lookup_id_to_name.update(shop_table_by_location_id)

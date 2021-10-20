@@ -1,4 +1,4 @@
-from worlds.alttp.ItemPool import difficulties
+from worlds.alttp_legacy.ItemPool import difficulties
 from test.TestBase import TestBase
 
 base_items = 41

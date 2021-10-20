@@ -17,7 +17,7 @@ def GetBeemizerItem(world, player, item):
 
 # should be replaced with direct world.create_item(item) call in the future
 def ItemFactory(items, player: int):
-    from worlds.alttp import ALTTPWorld
+    from worlds.alttp_legacy import ALTTPWorld
     world = ALTTPWorld(None, player)
     ret = []
     singleton = False

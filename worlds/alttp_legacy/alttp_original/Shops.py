@@ -3,10 +3,10 @@ from enum import unique, IntEnum
 from typing import List, Optional, Set, NamedTuple, Dict
 import logging
 
-from worlds.alttp.SubClasses import ALttPLocation
-from worlds.alttp.EntranceShuffle import door_addresses
-from worlds.alttp.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
-from worlds.alttp.Options import smallkey_shuffle
+from worlds.alttp_legacy.SubClasses import ALttPLocation
+from worlds.alttp_legacy.EntranceShuffle import door_addresses
+from worlds.alttp_legacy.Items import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
+from worlds.alttp_legacy.Options import smallkey_shuffle
 from Utils import int16_as_bytes
 
 logger = logging.getLogger("Shops")
@@ -583,6 +583,6 @@ def price_to_funny_price(item: dict, world, player: int):
             if any(x in item['item'] for x in price_blacklist[p_type]):
                 continue
             else:
-                item['price'] = min(price_chart[p_type](item['price']), 255)
+                item['price'] = min(price_chart[p_type](item['price']) , 255)
                 item['price_type'] = p_type
             break

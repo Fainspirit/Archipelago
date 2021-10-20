@@ -15,7 +15,7 @@ current_patch_version = 2
 
 
 def generate_yaml(patch: bytes, metadata: Optional[dict] = None) -> bytes:
-    from worlds.alttp.Rom import JAP10HASH
+    from worlds.alttp_legacy.Rom import JAP10HASH
     patch = yaml.dump({"meta": metadata,
                        "patch": patch,
                        "game": "A Link to the Past",
@@ -27,7 +27,7 @@ def generate_yaml(patch: bytes, metadata: Optional[dict] = None) -> bytes:
 
 
 def generate_patch(rom: bytes, metadata: Optional[dict] = None) -> bytes:
-    from worlds.alttp.Rom import get_base_rom_bytes
+    from worlds.alttp_legacy.Rom import get_base_rom_bytes
     if metadata is None:
         metadata = {}
     patch = bsdiff4.diff(get_base_rom_bytes(), rom)
@@ -47,7 +47,7 @@ def create_patch_file(rom_file_to_patch: str, server: str = "", destination: str
 
 
 def create_rom_bytes(patch_file: str, ignore_version: bool = False) -> Tuple[dict, str, bytearray]:
-    from worlds.alttp.Rom import get_base_rom_bytes
+    from worlds.alttp_legacy.Rom import get_base_rom_bytes
     data = Utils.parse_yaml(lzma.decompress(load_bytes(patch_file)).decode("utf-8-sig"))
     if not ignore_version and data["compatible_version"] > current_patch_version:
         raise RuntimeError("Patch file is incompatible with this patcher, likely an update is required.")

@@ -2,14 +2,14 @@ from collections import namedtuple
 import logging
 
 from BaseClasses import Region, RegionType
-from worlds.alttp.SubClasses import ALttPLocation
-from worlds.alttp.Shops import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
-from worlds.alttp.Bosses import place_bosses
-from worlds.alttp.Dungeons import get_dungeon_item_pool_player
-from worlds.alttp.EntranceShuffle import connect_entrance
+from worlds.alttp_legacy.SubClasses import ALttPLocation
+from worlds.alttp_legacy.Shops import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
+from worlds.alttp_legacy.Bosses import place_bosses
+from worlds.alttp_legacy.Dungeons import get_dungeon_item_pool_player
+from worlds.alttp_legacy.EntranceShuffle import connect_entrance
 from Fill import FillError
-from worlds.alttp.Items import ItemFactory, GetBeemizerItem
-from worlds.alttp.Options import smallkey_shuffle
+from worlds.alttp_legacy.Items import ItemFactory, GetBeemizerItem
+from worlds.alttp_legacy.Options import smallkey_shuffle
 
 # This file sets the item pools for various modes. Timed modes and triforce hunt are enforced first, and then extra items are specified per mode to fill in the remaining space.
 # Some basic items that various modes require are placed here, including pendants and crystals. Medallion requirements for the two relevant entrances are also decided.

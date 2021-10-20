@@ -21,13 +21,17 @@ import Patch
 from .InvertedRegions import create_inverted_regions, mark_dark_world_regions
 from .EntranceShuffle import link_entrances, link_inverted_entrances, plando_connect
 
-lttp_logger = logging.getLogger("A Link to the Past")
+lttp_legacy_logger = logging.getLogger("A Link to the Past - Legacy")
 
-class SampleWorld(World):
+
+class ALTTPWorldLegacy(World):
     """
-    The <Sample Game> is a <genre1> and <genre2> game. <Summary of setting>. <Summary of gameplay>>
+    The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
+    Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
+    dungeons on your quest to rescue the descendents of the seven wise men and defeat the evil
+    Ganon!
     """
-    game: str = "Sample Game"
+    game: str = "A Link to the Past - Legacy"
     options = alttp_options
     topology_present = True
     item_name_groups = item_name_groups
@@ -49,20 +53,43 @@ class SampleWorld(World):
         self.dungeon_specific_item_names = set()
         self.rom_name_available_event = threading.Event()
         self.has_progressive_bows = False
-        super(SampleWorld, self).__init__(*args, **kwargs)
+        super(ALTTPWorldLegacy, self).__init__(*args, **kwargs)
 
-    # TODO: Verify description accuracy
     def generate_early(self):
-        """Called before item filling begins"""
-
         player = self.player
         world = self.world
+
+        # system for sharing ER layouts
+        self.er_seed = str(world.random.randint(0, 2 ** 64))
+
+        if "-" in world.shuffle[player]:
+            shuffle, seed = world.shuffle[player].split("-", 1)
+            world.shuffle[player] = shuffle
+            if shuffle == "vanilla":
+                self.er_seed = "vanilla"
+            elif seed.startswith("group-") or world.is_race:
+                self.er_seed = get_same_seed(world, (
+                    shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
+            else:  # not a race or group seed, use set seed as is.
+                self.er_seed = seed
+        elif world.shuffle[player] == "vanilla":
+            self.er_seed = "vanilla"
+        for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
+            option = getattr(world, dungeon_item)[player]
+            if option == "own_world":
+                world.local_items[player].value |= self.item_name_groups[option.item_name_group]
+            elif option == "different_world":
+                world.non_local_items[player].value |= self.item_name_groups[option.item_name_group]
+            elif option.in_dungeon:
+                self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
+                if option == "original_dungeon":
+                    self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
+
+        world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
 
     def create_regions(self):
-        """ """
         player = self.player
         world = self.world
-
         if world.open_pyramid[player] == 'goal':
             world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
                                                                 'localganontriforcehunt', 'ganonpedestal'}
@@ -104,8 +131,6 @@ class SampleWorld(World):
         plando_connect(world, player)
 
     def collect_item(self, state: CollectionState, item: Item, remove=False):
-        """Used when an item is a placeholder for a progression of items to determine which variant to give"""
-
         item_name = item.name
         if item_name.startswith('Progressive '):
             if remove:
@@ -186,8 +211,6 @@ class SampleWorld(World):
             return item_name
 
     def pre_fill(self):
-        """Fill specific items before the algorithm takes over"""
-
         from Fill import fill_restrictive, FillError
         attempts = 5
         world = self.world
@@ -214,7 +237,7 @@ class SampleWorld(World):
                 world.random.shuffle(prize_locs)
                 fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
             except FillError as e:
-                lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
+                lttp_legacy_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
                                                 attempts - attempt)
                 for location in empty_crystal_locations:
                     location.item = None
@@ -303,10 +326,9 @@ class SampleWorld(World):
             del (multidata["connect_names"][self.world.player_name[self.player]])
 
     def get_required_client_version(self) -> tuple:
-        return max((0, 1, 4), super(SampleWorld, self).get_required_client_version())
+        return max((0, 1, 4), super(ALTTPWorldLegacy, self).get_required_client_version())
 
     def create_item(self, name: str) -> Item:
-        """Create a game's Item object based on name."""
         return ALttPItem(name, self.player, **as_dict_item_table[name])
 
     @classmethod
@@ -314,7 +336,7 @@ class SampleWorld(World):
                         restitempool, fill_locations):
         trash_counts = {}
         standard_keyshuffle_players = set()
-        for player in world.get_game_players("Sample Game"):
+        for player in world.get_game_players("A Link to the Past - Legacy"):
             if world.mode[player] == 'standard' and world.smallkey_shuffle[player] \
                     and world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
                 standard_keyshuffle_players.add(player)
