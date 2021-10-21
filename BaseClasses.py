@@ -156,15 +156,14 @@ class MultiWorld():
 
             # Check if we can defer option processing to the autoworld
             player_autoworld = self.autoworlds[player]
-
             if getattr(player_autoworld, "can_self_init"):
                 player_autoworld.handle_option_values(args.__dict__)
 
                 # Save common options
                 for option_key in Options.common_options:
-                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})
+                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})[player]
                 for option_key in Options.per_game_common_options:
-                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})
+                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})[player]
 
             else:
                 # This never gets used, I think so now it's commented out
