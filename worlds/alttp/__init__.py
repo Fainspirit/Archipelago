@@ -71,35 +71,25 @@ class ALTTPWorld(World):
         working_values = {}
 
         # For each option that this game cares about
-        for opt_primary_name, opt_obj in self.options.items():
+        for opt_name, opt_obj in self.options.items():
             val = None
 
-            if opt_primary_name in selected_options:
-                # Save the aliased option's value
-                val = selected_options[opt_primary_name][self.player]
-            else: # Check for aliases
-                option_aliases = opt_obj.name_lookup.values()
-
-                for name in option_aliases:
-                    # If the option was provided, save its value
-                    # keyed to the option's primary name.
-                    if name in selected_options:
-                        # Save the aliased option's value
-                        val = selected_options[name][self.player]
-                        # No need to check further aliases
-                        break
-
-            # The value wasn't found under any alias
-            if val is None:
+            # If the option was not provided a value, use the default
+            if opt_name in selected_options:
+                val = selected_options[opt_name]
+                print(f"{opt_name}: {val}")
+            else:
                 val = opt_obj.default
-                print(f"{val} was not provided. Setting to default value.")
+                print(f"{opt_name} was not provided. Setting to default value of {val}")
+
 
             # Save the value to a temporary option dict
-            working_values[opt_primary_name] = val
-            # Save the value to the autoworld if necessary
-            if opt_obj.keep_value:
-                self.saved_options[opt_primary_name] = selected_options[opt_primary_name]
-            print(f"{opt_primary_name}: {val}")
+            self.saved_options[opt_name] = val
+
+            # TODO: Remove Option.keep_value
+            # # Save the value to the autoworld if necessary
+            # if True or opt_obj.keep_value:
+            #     self.saved_options[opt_name] = val
 
 
     def generate_early(self):
@@ -109,7 +99,7 @@ class ALTTPWorld(World):
         # system for sharing ER layouts
         self.er_seed = str(world.random.randint(0, 2 ** 64))
 
-        if "-" in world.shuffle[player]:
+        if "-" in world.autoworlds[player].saved_options["shuffle"]:
             shuffle, seed = world.shuffle[player].split("-", 1)
             world.shuffle[player] = shuffle
             if shuffle == "vanilla":
@@ -313,9 +303,9 @@ class ALTTPWorld(World):
         # we skip in case of error, so that the original error in the output thread is the one that gets raised
         if rom_name:
             new_name = base64.b64encode(bytes(self.rom_name)).decode()
-            payload = multidata["connect_names"][self.world.player_name[self.player]]
+            payload = multidata["connect_names"][self.world.player_names[self.player]]
             multidata["connect_names"][new_name] = payload
-            del (multidata["connect_names"][self.world.player_name[self.player]])
+            del (multidata["connect_names"][self.world.player_names[self.player]])
 
     def get_required_client_version(self) -> tuple:
         return max((0, 1, 4), super(ALTTPWorld, self).get_required_client_version())
