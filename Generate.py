@@ -63,7 +63,7 @@ def parse_multiworld_args():
 def get_seed_name(random):
     return f"{random.randint(0, pow(10, seeddigits) - 1)}".zfill(seeddigits)
 
-
+# ALTTP ER SPECIFIC
 def main(args=None, callback=ERmain):
     if not args:
         args, options = parse_multiworld_args()
@@ -118,17 +118,17 @@ def main(args=None, callback=ERmain):
     if not weights_cache:
         raise Exception(f"No weights found. Provide a general weights file ({args.weights_file_path}) or individual player files. "
                         f"A mix is also permitted.")
-    erargs = parse_arguments(['--multi', str(args.multi)])
-    erargs.seed = seed
-    erargs.glitch_triforce = options["generator"]["glitch_triforce_room"]
-    erargs.spoiler = args.spoiler
-    erargs.race = args.race
-    erargs.outputname = seed_name
-    erargs.outputpath = args.outputpath
+    worldargs = parse_arguments(['--multi', str(args.multi)])
+    worldargs.seed = seed
+    worldargs.glitch_triforce = options["generator"]["glitch_triforce_room"]
+    worldargs.spoiler = args.spoiler
+    worldargs.race = args.race
+    worldargs.outputname = seed_name
+    worldargs.outputpath = args.outputpath
 
 
-    erargs.rom = args.rom
-    erargs.enemizercli = args.enemizercli
+    worldargs.rom = args.rom
+    worldargs.enemizercli = args.enemizercli
 
     settings_cache = {k: (roll_settings(v, args.plando) if args.samesettings else None)
                       for k, v in weights_cache.items()}
@@ -150,7 +150,12 @@ def main(args=None, callback=ERmain):
                         weights_cache[path][key] = option
 
     name_counter = Counter()
-    erargs.player_settings = {}
+    worldargs.player_settings = {}
+
+    # Set this here since it isn't set in ER any more
+    worldargs.name = {}
+    worldargs.game = {}
+
     for player in range(1, args.multi + 1):
         path = player_path_cache[player]
         if path:
@@ -158,33 +163,40 @@ def main(args=None, callback=ERmain):
                 # Calculate the final values for generation options
                 settings = settings_cache[path] if settings_cache[path] else \
                     roll_settings(weights_cache[path], args.plando)
+
+                # Copy these global options
+                # TODO: move to common options?
+                getattr(worldargs, "name")[player] = settings.name
+                getattr(worldargs, "game")[player] = settings.game
+
                 # For each option, copy it to entrance randomizer args, overwriting existing values
-                for k, v in vars(settings).items():
-                    if v is not None:
-                        try:
-                            getattr(erargs, k)[player] = v
-                        except AttributeError:
-                            setattr(erargs, k, {player: v})
-                        except Exception as e:
-                            raise Exception(f"Error setting {k} to {v} for player {player}") from e
+                # ...Except we don't do this any more, so comment it!
+                # for k, v in vars(settings).items():
+                #     if v is not None:
+                #         try:
+                #             getattr(worldargs, k)[player] = v
+                #         except AttributeError:
+                #             setattr(worldargs, k, {player: v})
+                #         except Exception as e:
+                #             raise Exception(f"Error setting {k} to {v} for player {player}") from e
             except Exception as e:
                 raise ValueError(f"File {path} is destroyed. Please fix your yaml.") from e
         else:
             raise RuntimeError(f'No weights specified for player {player}')
         if path == args.weights_file_path:  # if name came from the weights file, just use base player name
-            erargs.name[player] = f"Player{player}"
-        elif not erargs.name[player]:  # if name was not specified, generate it from filename
-            erargs.name[player] = os.path.splitext(os.path.split(path)[-1])[0]
-        # Set final player name
-        erargs.name[player] = handle_name(erargs.name[player], player, name_counter)
+            worldargs.name[player] = f"Player{player}"
+        elif not worldargs.name[player]:  # if name was not specified, generate it from filename
+            worldargs.name[player] = os.path.splitext(os.path.split(path)[-1])[0]
+        # Set final player name to avoid duplicated and forbidden names
+        worldargs.name[player] = handle_name(worldargs.name[player], player, name_counter)
 
-    if len(set(erargs.name.values())) != len(erargs.name):
-        raise Exception(f"Names have to be unique. Names: {erargs.name}")
+    if len(set(worldargs.name.values())) != len(worldargs.name):
+        raise Exception(f"Names have to be unique. Names: {worldargs.name}")
 
     if args.yaml_output:
         import yaml
         important = {}
-        for option, player_settings in vars(erargs).items():
+        for option, player_settings in vars(worldargs).items():
             if type(player_settings) == dict:
                 if all(type(value) != list for value in player_settings.values()):
                     if len(player_settings.values()) > 1:
@@ -205,7 +217,7 @@ def main(args=None, callback=ERmain):
         with open(os.path.join(args.outputpath if args.outputpath else ".", f"generate_{seed_name}.yaml"), "wt") as f:
             yaml.dump(important, f)
 
-    callback(erargs, seed)
+    callback(worldargs, seed)
 
 
 class SafeDict(dict):
