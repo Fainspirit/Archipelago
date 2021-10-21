@@ -15,14 +15,17 @@ from worlds import AutoWorldRegister
 # ------------------ #
 
 
+# TODO: Figure out why this still sets namespace level args!
 def roll_settings(weights: dict, logger: logging.Logger, plando_options: typing.Set[str] = frozenset(("bosses",))):
     """Decide all of the settings that will be used for world generation"""
-    if "linked_options" in weights:
-        weights = roll_linked_options(weights)
+    # These no longer matter
+    #  if "linked_options" in weights:
+    #     weights = roll_linked_options(weights)
 
     if "triggers" in weights:
         weights = roll_triggers(weights, weights["triggers"])
 
+    # Version verification
     requirements = weights.get("requires", {})
     if requirements:
         version = requirements.get("version", __version__)
@@ -43,31 +46,41 @@ def roll_settings(weights: dict, logger: logging.Logger, plando_options: typing.
                         f"Settings reports required plando modules {', '.join(required_plando_options)}, "
                         f"which are not enabled.")
 
+    # Verify that common game-based options are within a game
     ret = argparse.Namespace()
     for option_key in Options.per_game_common_options:
         if option_key in weights:
             raise Exception(f"Option {option_key} has to be in a game's section, not on its own.")
 
+    # Ensure that the game you rolled has weights available
     ret.game = get_choice("game", weights)
     if ret.game not in weights:
         raise Exception(f"No game options for selected game \"{ret.game}\" found.")
 
+    # Get the world's class'
     world_type = AutoWorldRegister.world_types[ret.game]
+    # Get the game's weights
     game_weights = weights[ret.game]
 
     if "triggers" in game_weights:
         weights = roll_triggers(weights, game_weights["triggers"])
         game_weights = weights[ret.game]
 
+    # Copy common options to ret
     ret.name = get_choice('name', weights)
-    for option_key, option in Options.common_options.items():
-        setattr(ret, option_key, option.from_any(get_choice(option_key, weights, option.default)))
+    for option_key, option_obj in Options.common_options.items():
+        setattr(ret, option_key, option_obj.from_any(get_choice(option_key, weights, option_obj.default)))
 
+    # If the chosen game is in registered world types
+    # (This is guaranteed true since world_type is assigned from this dict)
+    # Assign the results of the yaml roll to the ret namespace
+    # ret will be passed to games' handle_option_values if they support it
+    # otherwise values will be written to the MultiWorld object
     if ret.game in AutoWorldRegister.world_types:
-        for option_key, option in world_type.options.items():
-            handle_option(ret, game_weights, option_key, option)
-        for option_key, option in Options.per_game_common_options.items():
-            handle_option(ret, game_weights, option_key, option)
+        for option_key, option_obj in world_type.options.items():
+            handle_option(ret, game_weights, option_key, option_obj)
+        for option_key, option_obj in Options.per_game_common_options.items():
+            handle_option(ret, game_weights, option_key, option_obj)
         # Item plando
         if "items" in plando_options:
             ret.plando_items = roll_item_plando(world_type, game_weights)
@@ -83,11 +96,10 @@ def roll_settings(weights: dict, logger: logging.Logger, plando_options: typing.
                             get_choice("exit", placement),
                             get_choice("direction", placement, "both")
                         ))
-        elif ret.game == "A Link to the Past":
-            pass
-            # TODO: Remove this check entirely
-            # raise Exception("This should not be needed with the new options system!")
-            # roll_alttp_settings(ret, game_weights, plando_options, logger)
+        # elif ret.game == "A Link to the Past":
+        #         #     pass
+        #         #     # raise Exception("This should not be needed with the new options system!")
+        #         #     # roll_alttp_settings(ret, game_weights, plando_options, logger)
     else:
         raise Exception(f"Unsupported game {ret.game}")
     return ret
@@ -203,8 +215,15 @@ def handle_option(ret: argparse.Namespace, game_weights: dict, option_key: str, 
                 player_option = option.from_any(game_weights[option_key])
             else:
                 player_option = option.from_any(get_choice(option_key, game_weights))
+            # If the autoworld doesn't handle options locally, we still need to
+            # assign this option to the global scope. Ideally, no games will use
+            # this branch and it can be removed
+            #if not AutoWorldRegister.world_types[ret.game].can_self_init:
             setattr(ret, option_key, player_option)
         except Exception as e:
+            # autoworld.Options.options[option_key] does not recognize the given value
+            # This may occur for legacy option arguments and should probably
+            # be added to the Option as an alias.
             raise Exception(f"Error generating option {option_key} in {ret.game}") from e
         else:
             # verify item names existing
@@ -218,6 +237,7 @@ def handle_option(ret: argparse.Namespace, game_weights: dict, option_key: str, 
                     if location_name not in AutoWorldRegister.world_types[ret.game].location_names:
                         raise Exception(f"Location {location_name} from option {player_option} "
                                         f"is not a valid location name from {ret.game}")
+    # If the game does not define the option, store it globally
     else:
         setattr(ret, option_key, option(option.default))
 
