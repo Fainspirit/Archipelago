@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from argparse import Namespace
 from typing import Dict, Set, Tuple, List, Optional
 
 from BaseClasses import MultiWorld, Item, CollectionState, Location
@@ -118,6 +120,14 @@ class World(metaclass=AutoWorldRegister):
     # If there is visibility in what is being sent, this is where it will be known.
     sending_visible: bool = False
 
+    can_self_init = False
+    """Does this world support fully-autoworld argument state instead of the old world-based system?"""
+
+    # TODO: add tag in Option class to define if an option should be persistent?
+    saved_options: Dict[str, object] = {}
+    """The option selections from the world's yaml that should persist after initialization"""
+
+
     def __init__(self, world: MultiWorld, player: int):
         self.world = world
         self.player = player
@@ -202,6 +212,9 @@ class World(metaclass=AutoWorldRegister):
             return True
         return False
 
+    def handle_option_values(self, selected_options: Dict[str, object]):
+        """Allows the world to process the selected yaml options"""
+        raise NotImplementedError(f"Because {self.__class__} has 'can_self_init' set to true, it must override 'handle_yaml_data' to replace legacy behavior!")
 
 # any methods attached to this can be used as part of CollectionState,
 # please use a prefix as all of them get clobbered together

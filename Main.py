@@ -78,7 +78,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     world.required_medallions = args.required_medallions.copy()
     world.game = args.game.copy()
 
-    # Leave this one!
+    # Leave this one here!
     world.set_options(args)
 
     world.player_name = args.name.copy()

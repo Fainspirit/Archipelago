@@ -2,10 +2,9 @@ import random
 import logging
 import threading
 import typing
+from argparse import Namespace
 
-
-
-
+import Options
 from BaseClasses import Item, CollectionState
 from .mode_handler import ModeHandler
 
@@ -38,8 +37,10 @@ class ALTTPWorld(World):
     Ganon!
     """
     game: str = "A Link to the Past"
+    can_self_init = True
 
     # Based on settings, built options list
+    # This gets built for the class on autoworld init, so there may be no need to
     options = ModeHandler.build_options(True, True, False)
 
     topology_present = True
@@ -63,6 +64,43 @@ class ALTTPWorld(World):
         self.rom_name_available_event = threading.Event()
         self.has_progressive_bows = False
         super(ALTTPWorld, self).__init__(*args, **kwargs)
+
+    def handle_option_values(self, selected_options: typing.Dict[str, object]):
+        print("Importing options")
+
+        working_values = {}
+
+        # For each option that this game cares about
+        for opt_primary_name, opt_obj in self.options.items():
+            val = None
+
+            if opt_primary_name in selected_options:
+                # Save the aliased option's value
+                val = selected_options[opt_primary_name][self.player]
+            else: # Check for aliases
+                option_aliases = opt_obj.name_lookup.values()
+
+                for name in option_aliases:
+                    # If the option was provided, save its value
+                    # keyed to the option's primary name.
+                    if name in selected_options:
+                        # Save the aliased option's value
+                        val = selected_options[name][self.player]
+                        # No need to check further aliases
+                        break
+
+            # The value wasn't found under any alias
+            if val is None:
+                val = opt_obj.default
+                print(f"{val} was not provided. Setting to default value.")
+
+            # Save the value to a temporary option dict
+            working_values[opt_primary_name] = val
+            # Save the value to the autoworld if necessary
+            if opt_obj.keep_value:
+                self.saved_options[opt_primary_name] = selected_options[opt_primary_name]
+            print(f"{opt_primary_name}: {val}")
+
 
     def generate_early(self):
         player = self.player

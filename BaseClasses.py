@@ -29,6 +29,7 @@ class MultiWorld():
     is_race: bool = False
     precollected_items: Dict[int, List[Item]]
 
+
     class AttributeProxy():
         def __init__(self, rule):
             self.rule = rule
@@ -142,15 +143,40 @@ class MultiWorld():
     def set_options(self, args):
         from worlds import AutoWorld
         for player in self.player_ids:
-            self.custom_data[player] = {}
+
+            # Get the world's class to access its options & constructor
             world_type = AutoWorld.AutoWorldRegister.world_types[self.game[player]]
-            for option_key in world_type.options:
-                setattr(self, option_key, getattr(args, option_key, {}))
-            for option_key in Options.common_options:
-                setattr(self, option_key, getattr(args, option_key, {}))
-            for option_key in Options.per_game_common_options:
-                setattr(self, option_key, getattr(args, option_key, {}))
+
+            # Initialize the player's world
             self.autoworlds[player] = world_type(self, player)
+
+            # Check if we can defer option processing to the autoworld
+            player_autoworld = self.autoworlds[player]
+
+            if getattr(player_autoworld, "can_self_init"):
+                player_autoworld.handle_option_values(args.__dict__)
+
+                # Save common options
+                for option_key in Options.common_options:
+                    setattr(player_autoworld, "saved_options[option_key]", getattr(args, option_key, {}))
+                for option_key in Options.per_game_common_options:
+                    setattr(player_autoworld, "saved_options[option_key]", getattr(args, option_key, {}))
+
+            else:
+                # This never gets used, I think so now it's commented out
+                # self.custom_data[player] = {}
+
+
+                for option_key in world_type.options:
+                    setattr(self, option_key, getattr(args, option_key, {}))
+                for option_key in Options.common_options:
+                    setattr(self, option_key, getattr(args, option_key, {}))
+                for option_key in Options.per_game_common_options:
+                    setattr(self, option_key, getattr(args, option_key, {}))
+
+
+
+
 
     # intended for unittests
     def set_default_common_options(self):
