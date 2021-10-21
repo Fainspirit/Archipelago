@@ -88,7 +88,15 @@ getattr(autoworld: Object, option_name: str, default_value)
 
 
 ADD OPTIONS
-# ['', '',
+# [entrance_shuffle:
+  none: 46
+  dungeonssimple: 0
+  dungeonsfull: 0
+  simple: 0
+  restricted: 0
+  full: 0
+  crossed: 0
+  insanity: 0
 #                          "plando_items", "plando_texts", "plando_connections",
 #
 #                          'shuffle_prizes', 'sprite_pool', 'dark_room_logic',
