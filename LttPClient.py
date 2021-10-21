@@ -23,8 +23,8 @@ import colorama
 
 from NetUtils import *
 
-from worlds.alttp import Regions, Shops
-from worlds.alttp import Items
+from worlds.alttp_legacy import Regions, Shops
+from worlds.alttp_legacy import Items
 from worlds.alttp.Rom import ROM_PLAYER_LIMIT
 import Utils
 from CommonClient import CommonContext, server_loop, console_loop, ClientCommandProcessor, gui_enabled, init_logging

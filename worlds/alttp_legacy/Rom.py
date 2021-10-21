@@ -788,6 +788,7 @@ def patch_rom(world, rom, player, enemized):
                     rom.write_byte(location.player_address, 0xFF)
                 elif location.item.player != player:
                     if location.player_address is not None:
+                        rom.write_byte(location.player_address, location.item.player)
                         rom.write_byte(location.player_address, min(location.item.player, ROM_PLAYER_LIMIT))
                     else:
                         itemid = 0x5A

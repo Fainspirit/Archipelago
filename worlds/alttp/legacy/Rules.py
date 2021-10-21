@@ -1,5 +1,6 @@
 import collections
 import logging
+
 from worlds.alttp.legacy import OverworldGlitchRules
 from BaseClasses import RegionType, MultiWorld, Entrance
 from worlds.alttp.legacy.Items import ItemFactory, progression_items, item_name_groups
@@ -9,6 +10,7 @@ from worlds.alttp.legacy.Bosses import GanonDefeatRule
 from worlds.generic.Rules import set_rule, add_rule, forbid_item, add_item_rule, item_in_locations, \
     item_name
 from worlds.alttp.standard.options import smallkey_shuffle
+
 
 
 def set_rules(world):

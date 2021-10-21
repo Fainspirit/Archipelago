@@ -20,7 +20,7 @@ def parse_arguments(argv, no_defaults=False):
 
     # we need to know how many players we have first
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--multi', default=defval(1), type=lambda value: max(int(value), 1))
+    parser.add_argument('--multi', default=defval(1), type=lambda value: min(max(int(value), 1), 255))
     multiargs, _ = parser.parse_known_args(argv)
 
     # TODO: Make sure we don't need this method (ER arg parse)
