@@ -12,6 +12,7 @@ class ERDummy(Choice):
     option_1 = 1
     option_2 = 2
 
+#     ret.plando_connections = []
 
 options: typing.Dict[str, type(Option)] = {
     "er_dummy": ERDummy,
