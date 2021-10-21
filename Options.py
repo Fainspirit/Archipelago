@@ -41,6 +41,8 @@ class Option(metaclass=AssembleOptions):
     value: int
     name_lookup: typing.Dict[int, str]
     default = 0
+    keep_value: bool = False
+    """If this option's value should be saved with the autoworld past the initialization step"""
 
     # convert option_name_long into Name Long as displayname, otherwise name_long is the result.
     # Handled in get_option_name()
