@@ -41,49 +41,53 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     logger = logging.getLogger()
     world.set_seed(seed, args.race, str(args.outputname if args.outputname else world.seed))
 
-    world.shuffle = args.shuffle.copy()
-    world.logic = args.logic.copy()
-    world.mode = args.mode.copy()
-    world.difficulty = args.difficulty.copy()
-    world.item_functionality = args.item_functionality.copy()
-    world.timer = args.timer.copy()
-    world.goal = args.goal.copy()
+    # aLttP
+    # world.shuffle = args.shuffle.copy()
+    # world.logic = args.logic.copy()
+    # world.mode = args.mode.copy()
+    # world.difficulty = args.difficulty.copy()
+    # world.item_functionality = args.item_functionality.copy()
+    # world.timer = args.timer.copy()
+    # world.goal = args.goal.copy()
 
+    # TODO: Figure out what this does
     if hasattr(args, "algorithm"):  # current GUI options
         world.algorithm = args.algorithm
         world.shuffleganon = args.shuffleganon
         world.custom = args.custom
         world.customitemarray = args.customitemarray
 
-    world.open_pyramid = args.open_pyramid.copy()
-    world.boss_shuffle = args.shufflebosses.copy()
-    world.enemy_health = args.enemy_health.copy()
-    world.enemy_damage = args.enemy_damage.copy()
-    world.beemizer = args.beemizer.copy()
-    world.timer = args.timer.copy()
-    world.countdown_start_time = args.countdown_start_time.copy()
-    world.red_clock_time = args.red_clock_time.copy()
-    world.blue_clock_time = args.blue_clock_time.copy()
-    world.green_clock_time = args.green_clock_time.copy()
-    world.dungeon_counters = args.dungeon_counters.copy()
-    world.triforce_pieces_available = args.triforce_pieces_available.copy()
-    world.triforce_pieces_required = args.triforce_pieces_required.copy()
-    world.shop_shuffle = args.shop_shuffle.copy()
-    world.shuffle_prizes = args.shuffle_prizes.copy()
-    world.sprite_pool = args.sprite_pool.copy()
-    world.dark_room_logic = args.dark_room_logic.copy()
-    world.plando_items = args.plando_items.copy()
-    world.plando_texts = args.plando_texts.copy()
-    world.plando_connections = args.plando_connections.copy()
-    world.required_medallions = args.required_medallions.copy()
+    # world.open_pyramid = args.open_pyramid.copy()
+    # world.boss_shuffle = args.shufflebosses.copy()
+    # world.enemy_health = args.enemy_health.copy()
+    # world.enemy_damage = args.enemy_damage.copy()
+    # world.beemizer = args.beemizer.copy()
+    # world.timer = args.timer.copy()
+    # world.countdown_start_time = args.countdown_start_time.copy()
+    # world.red_clock_time = args.red_clock_time.copy()
+    # world.blue_clock_time = args.blue_clock_time.copy()
+    # world.green_clock_time = args.green_clock_time.copy()
+    # world.dungeon_counters = args.dungeon_counters.copy()
+    # world.triforce_pieces_available = args.triforce_pieces_available.copy()
+    # world.triforce_pieces_required = args.triforce_pieces_required.copy()
+    # world.shop_shuffle = args.shop_shuffle.copy()
+    # world.shuffle_prizes = args.shuffle_prizes.copy()
+    # world.sprite_pool = args.sprite_pool.copy()
+    # world.dark_room_logic = args.dark_room_logic.copy()
+    # world.plando_items = args.plando_items.copy()
+    # world.plando_texts = args.plando_texts.copy()
+    # world.plando_connections = args.plando_connections.copy()
+    # world.required_medallions = args.required_medallions.copy()
+
+    # This one matters too since it's not an autoworld option
     world.game = args.game.copy()
 
     # Leave this one here!
     world.set_options(args)
 
-    world.player_name = args.name.copy()
+    world.player_names = args.name.copy()
     world.enemizer = args.enemizercli
-    world.sprite = args.sprite.copy()
+    # world.sprite = args.sprite.copy()
     world.glitch_triforce = args.glitch_triforce  # This is enabled/disabled globally, no per player option.
 
     logger.info('Archipelago Version %s  -  Seed: %s\n', __version__, world.seed)
@@ -289,8 +293,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                 multidata = {
                     "slot_data": slot_data,
                     "games": games,
-                    "names": [[name for player, name in sorted(world.player_name.items())]],
-                    "connect_names": {name: (0, player) for player, name in world.player_name.items()},
+                    "names": [[name for player, name in sorted(world.player_names.items())]],
+                    "connect_names": {name: (0, player) for player, name in world.player_names.items()},
                     "remote_items": {player for player in world.player_ids if
                                      world.autoworlds[player].remote_items},
                     "remote_start_inventory": {player for player in world.player_ids if

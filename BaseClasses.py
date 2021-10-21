@@ -16,7 +16,7 @@ import Utils
 
 class MultiWorld():
     debug_types = False
-    player_name: Dict[int, str]
+    player_names: Dict[int, str]
     _region_cache: Dict[int, Dict[str, Region]]
     difficulty_requirements: dict
     required_medallions: dict
@@ -77,20 +77,23 @@ class MultiWorld():
             lambda player: self.shuffle[player] not in ['vanilla', 'simple', 'restricted', 'dungeonssimple'])
         self.NOTCURSED = self.AttributeProxy(lambda player: not self.CURSED[player])
 
+        # We do not need to set default settings (at least for aLttP,
+        # as that is handled by the Option classes
+        # TODO: Make the rest of these not be here
         for player in range(1, players + 1):
             def set_player_attr(attr, val):
                 self.__dict__.setdefault(attr, {})[player] = val
 
             set_player_attr('tech_tree_layout_prerequisites', {})
             set_player_attr('_region_cache', {})
-            set_player_attr('shuffle', "vanilla")
-            set_player_attr('logic', "noglitches")
-            set_player_attr('mode', 'open')
-            set_player_attr('difficulty', 'normal')
-            set_player_attr('item_functionality', 'normal')
-            set_player_attr('timer', False)
-            set_player_attr('goal', 'ganon')
-            set_player_attr('required_medallions', ['Ether', 'Quake'])
+            # set_player_attr('shuffle', "vanilla")
+            # set_player_attr('logic', "noglitches")
+            # set_player_attr('mode', 'open')
+            # set_player_attr('difficulty', 'normal')
+            # set_player_attr('item_functionality', 'normal')
+            # set_player_attr('timer', False)
+            # set_player_attr('goal', 'ganon')
+            # set_player_attr('required_medallions', ['Ether', 'Quake'])
             set_player_attr('swamp_patch_required', False)
             set_player_attr('powder_patch_required', False)
             set_player_attr('ganon_at_pyramid', True)
@@ -101,30 +104,31 @@ class MultiWorld():
             set_player_attr('can_access_trock_middle', None)
             set_player_attr('fix_fake_world', True)
             set_player_attr('difficulty_requirements', None)
-            set_player_attr('boss_shuffle', 'none')
-            set_player_attr('enemy_health', 'default')
-            set_player_attr('enemy_damage', 'default')
-            set_player_attr('beemizer', 0)
+            # set_player_attr('boss_shuffle', 'none')
+            # set_player_attr('enemy_health', 'default')
+            # set_player_attr('enemy_damage', 'default')
+            # set_player_attr('beemizer', 0)
             set_player_attr('escape_assist', [])
-            set_player_attr('open_pyramid', False)
+            # set_player_attr('open_pyramid', False)
             set_player_attr('treasure_hunt_icon', 'Triforce Piece')
             set_player_attr('treasure_hunt_count', 0)
             set_player_attr('clock_mode', False)
-            set_player_attr('countdown_start_time', 10)
-            set_player_attr('red_clock_time', -2)
-            set_player_attr('blue_clock_time', 2)
-            set_player_attr('green_clock_time', 4)
+            # set_player_attr('countdown_start_time', 10)
+            # set_player_attr('red_clock_time', -2)
+            # set_player_attr('blue_clock_time', 2)
+            # set_player_attr('green_clock_time', 4)
             set_player_attr('can_take_damage', True)
-            set_player_attr('triforce_pieces_available', 30)
-            set_player_attr('triforce_pieces_required', 20)
-            set_player_attr('shop_shuffle', 'off')
+            # set_player_attr('triforce_pieces_available', 30)
+            # set_player_attr('triforce_pieces_required', 20)
+            # set_player_attr('shop_shuffle', 'off')
+            # TODO: Add these last 7 options to alttp.standard.options
             set_player_attr('shuffle_prizes', "g")
             set_player_attr('sprite_pool', [])
             set_player_attr('dark_room_logic', "lamp")
             set_player_attr('plando_items', [])
             set_player_attr('plando_texts', {})
             set_player_attr('plando_connections', [])
-            set_player_attr('game', "A Link to the Past")
+            # set_player_attr('game', "A Link to the Past")
             set_player_attr('completion_condition', lambda state: True)
         self.custom_data = {}
         self.autoworlds = {}
@@ -158,9 +162,9 @@ class MultiWorld():
 
                 # Save common options
                 for option_key in Options.common_options:
-                    setattr(player_autoworld, "saved_options[option_key]", getattr(args, option_key, {}))
+                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})
                 for option_key in Options.per_game_common_options:
-                    setattr(player_autoworld, "saved_options[option_key]", getattr(args, option_key, {}))
+                    getattr(player_autoworld, "saved_options")[option_key] = getattr(args, option_key, {})
 
             else:
                 # This never gets used, I think so now it's commented out
@@ -205,7 +209,7 @@ class MultiWorld():
         return obj.name if self.players == 1 else f'{obj.name} ({self.get_player_name(obj.player)})'
 
     def get_player_name(self, player: int) -> str:
-        return self.player_name[player]
+        return self.player_names[player]
 
     def initialize_regions(self, regions=None):
         for region in regions if regions else self.regions:
@@ -214,7 +218,7 @@ class MultiWorld():
 
     @functools.cached_property
     def world_name_lookup(self):
-        return {self.player_name[player_id]: player_id for player_id in self.player_ids}
+        return {self.player_names[player_id]: player_id for player_id in self.player_ids}
 
     def _recache(self):
         """Rebuild world cache"""
