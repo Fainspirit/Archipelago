@@ -84,3 +84,12 @@ split regions into memory addresses and standard groupings
 write options in base classes spoiler
 
 getattr(autoworld: Object, option_name: str, default_value)
+
+
+
+ADD OPTIONS
+# ['', '',
+#                          "plando_items", "plando_texts", "plando_connections",
+#
+#                          'shuffle_prizes', 'sprite_pool', 'dark_room_logic',
+#                          'game']:
