@@ -65,32 +65,24 @@ class ALTTPWorld(World):
         self.has_progressive_bows = False
         super(ALTTPWorld, self).__init__(*args, **kwargs)
 
-    def handle_option_values(self, selected_options: typing.Dict[str, object]):
-        print("Importing options")
 
-        working_values = {}
+    # Selected options contain both global scope and per player
+    def handle_option_values(self, args_from_world: typing.Dict[str, object]):
+        """Build the world's store of the options that were rolled for it."""
 
         # For each option that this game cares about
         for opt_name, opt_obj in self.options.items():
-            val = None
 
-            # If the option was not provided a value, use the default
-            if opt_name in selected_options:
-                val = selected_options[opt_name]
-                print(f"{opt_name}: {val}")
+            if opt_name in args_from_world:
+                val = args_from_world[opt_name][self.player]
+                opt_obj.value = val
+
+                # TODO: Remove Option.keep_value (if there is truly no use for it)
+                #if opt_obj.keep_value:
+                # Save the value to this autoworld
+                self.saved_options[opt_name] = val
             else:
-                val = opt_obj.default
-                print(f"{opt_name} was not provided. Setting to default value of {val}")
-
-
-            # Save the value to a temporary option dict
-            self.saved_options[opt_name] = val
-
-            # TODO: Remove Option.keep_value
-            # # Save the value to the autoworld if necessary
-            # if True or opt_obj.keep_value:
-            #     self.saved_options[opt_name] = val
-
+                raise Exception(f"Tried to handle {opt_name}, which isn't defined for A Link to the Past!")
 
     def generate_early(self):
         player = self.player
@@ -99,9 +91,13 @@ class ALTTPWorld(World):
         # system for sharing ER layouts
         self.er_seed = str(world.random.randint(0, 2 ** 64))
 
-        if "-" in world.autoworlds[player].saved_options["shuffle"]:
+        # TODO: Verify shuffle options + add entrance_shuffle option
+        # If shuffle options have dash
+        if False and "-" in world.autoworlds[player].saved_options["shuffle"]:
             shuffle, seed = world.shuffle[player].split("-", 1)
             world.shuffle[player] = shuffle
+
+            # Determine what seed to use for ER
             if shuffle == "vanilla":
                 self.er_seed = "vanilla"
             elif seed.startswith("group-") or world.is_race:
@@ -109,11 +105,17 @@ class ALTTPWorld(World):
                     shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
             else:  # not a race or group seed, use set seed as is.
                 self.er_seed = seed
-        elif world.shuffle[player] == "vanilla":
+
+        # TODO this
+        #elif world.shuffle[player] == "vanilla":
+        elif False and self.saved_options["entrance_shuffle"] == "vanilla":
             self.er_seed = "vanilla"
+
         for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
-            option = getattr(world, dungeon_item)[player]
+            #option = getattr(world, dungeon_item)[player]
+            option = self.saved_options[dungeon_item]
             if option == "own_world":
+                # TODO: make sure world has local items for compat, use local here
                 world.local_items[player].value |= self.item_name_groups[option.item_name_group]
             elif option == "different_world":
                 world.non_local_items[player].value |= self.item_name_groups[option.item_name_group]
@@ -122,7 +124,6 @@ class ALTTPWorld(World):
                 if option == "original_dungeon":
                     self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
 
-        world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
 
     def create_regions(self):
         player = self.player
