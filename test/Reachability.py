@@ -15,7 +15,7 @@ class TestBase(unittest.TestCase):
 
                     world = MultiWorld(1)
                     world.game[1] = game_name
-                    world.player_name = {1: "Tester"}
+                    world.player_names = {1: "Tester"}
                     world.set_seed()
                     args = Namespace()
                     for name, option in world_type.options.items():

@@ -1655,7 +1655,7 @@ def patch_rom(world, rom, player, enemized):
 
     # set player names
     for p in range(1, min(world.players, ROM_PLAYER_LIMIT) + 1):
-        rom.write_bytes(0x195FFC + ((p - 1) * 32), hud_format_text(world.player_name[p]))
+        rom.write_bytes(0x195FFC + ((p - 1) * 32), hud_format_text(world.player_names[p]))
     if world.players > ROM_PLAYER_LIMIT:
         rom.write_bytes(0x195FFC + ((ROM_PLAYER_LIMIT - 1) * 32), hud_format_text("Archipelago"))
 
@@ -2111,11 +2111,11 @@ def write_strings(rom, world, player):
             hint = dest.hint_text
         if dest.player != player:
             if ped_hint:
-                hint += f" for {world.player_name[dest.player]}!"
+                hint += f" for {world.player_names[dest.player]}!"
             elif type(dest) in [Region, ALttPLocationLegacy]:
-                hint += f" in {world.player_name[dest.player]}'s world"
+                hint += f" in {world.player_names[dest.player]}'s world"
             else:
-                hint += f" for {world.player_name[dest.player]}"
+                hint += f" for {world.player_names[dest.player]}"
         return hint
 
     # For hints, first we write hints about entrances, some from the inconvenient list others from all reasonable entrances.

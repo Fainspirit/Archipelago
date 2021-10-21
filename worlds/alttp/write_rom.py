@@ -51,12 +51,12 @@ def write_rom(autoworld, output_directory: str):
 
         # Write modified ROM to disk
         outfilepname = f'_P{player}'
-        outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
-            if world.player_name[player] != 'Player%d' % player else ''
+        outfilepname += f"_{world.player_names[player].replace(' ', '_')}" \
+            if world.player_names[player] != 'Player%d' % player else ''
 
         rompath = os.path.join(output_directory, f'AP_{world.seed_name}{outfilepname}.sfc')
         rom.write_to_file(rompath)
-        Patch.create_patch_file(rompath, player=player, player_name=world.player_name[player])
+        Patch.create_patch_file(rompath, player=player, player_name=world.player_names[player])
         os.unlink(rompath)
         autoworld.rom_name = rom.name
     except:

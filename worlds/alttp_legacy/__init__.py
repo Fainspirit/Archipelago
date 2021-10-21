@@ -300,12 +300,12 @@ class ALTTPWorldLegacy(World):
 
             # Write modified ROM to disk
             outfilepname = f'_P{player}'
-            outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
-                if world.player_name[player] != 'Player%d' % player else ''
+            outfilepname += f"_{world.player_names[player].replace(' ', '_')}" \
+                if world.player_names[player] != 'Player%d' % player else ''
 
             rompath = os.path.join(output_directory, f'AP_{world.seed_name}{outfilepname}.sfc')
             rom.write_to_file(rompath)
-            Patch.create_patch_file(rompath, player=player, player_name=world.player_name[player])
+            Patch.create_patch_file(rompath, player=player, player_name=world.player_names[player])
             os.unlink(rompath)
             self.rom_name = rom.name
         except:
@@ -321,9 +321,9 @@ class ALTTPWorldLegacy(World):
         # we skip in case of error, so that the original error in the output thread is the one that gets raised
         if rom_name:
             new_name = base64.b64encode(bytes(self.rom_name)).decode()
-            payload = multidata["connect_names"][self.world.player_name[self.player]]
+            payload = multidata["connect_names"][self.world.player_names[self.player]]
             multidata["connect_names"][new_name] = payload
-            del (multidata["connect_names"][self.world.player_name[self.player]])
+            del (multidata["connect_names"][self.world.player_names[self.player]])
 
     def get_required_client_version(self) -> tuple:
         return max((0, 1, 4), super(ALTTPWorldLegacy, self).get_required_client_version())
