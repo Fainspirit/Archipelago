@@ -39,6 +39,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     world = MultiWorld(args.multi)
 
     logger = logging.getLogger()
+
+    # Set seeds for
     world.set_seed(seed, args.race, str(args.outputname if args.outputname else world.seed))
 
     # aLttP
@@ -108,6 +110,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
 
     logger.info('')
 
+    #
     for player in world.player_ids:
         for item_name, count in world.start_inventory[player].value.items():
             for _ in range(count):

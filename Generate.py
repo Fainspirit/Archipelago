@@ -156,11 +156,12 @@ def main(args=None, callback=ERmain):
     worldargs.name = {}
     worldargs.game = {}
 
+    # Roll the settings for each player and store them as arrays in the worldargs namespace
     for player in range(1, args.multi + 1):
         path = player_path_cache[player]
         if path:
             try:
-                # Calculate the final values for generation options
+                # Calculate the final values for the player's generation options
                 settings = settings_cache[path] if settings_cache[path] else \
                     roll_settings(weights_cache[path], args.plando)
 
@@ -170,7 +171,8 @@ def main(args=None, callback=ERmain):
                 #getattr(worldargs, "name")[player] = settings.name
                 #getattr(worldargs, "game")[player] = settings.game
 
-                # For each option, copy it to entrance randomizer args, overwriting existing values
+                # For each option, copy it to the worldargs namespace, overwriting existing values
+                # TODO: Move this out so it just gets used in world init instead of saving in arrays at all
                 for k, v in vars(settings).items():
                     if v is not None:
                         try:

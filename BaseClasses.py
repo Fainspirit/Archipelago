@@ -67,6 +67,8 @@ class MultiWorld():
         self.dynamic_regions = []
         self.dynamic_locations = []
         self.spoiler = Spoiler(self)
+
+        # Move to alttp gen
         self.fix_trock_doors = self.AttributeProxy(
             lambda player: self.shuffle[player] != 'vanilla' or self.mode[player] == 'inverted')
         self.fix_skullwoods_exit = self.AttributeProxy(

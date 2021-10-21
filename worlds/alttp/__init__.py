@@ -100,7 +100,9 @@ class ALTTPWorld(World):
             # Determine what seed to use for ER
             if shuffle == "vanilla":
                 self.er_seed = "vanilla"
-            elif seed.startswith("group-") or world.is_race:
+
+            # If the entrance randomizer should be seeded identically (for a race)
+            elif self.seed.startswith("group-") or world.is_race:
                 self.er_seed = get_same_seed(world, (
                     shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
             else:  # not a race or group seed, use set seed as is.
@@ -111,16 +113,36 @@ class ALTTPWorld(World):
         elif False and self.saved_options["entrance_shuffle"] == "vanilla":
             self.er_seed = "vanilla"
 
+        # Create custom groups for where items can be placed
+        self.local_items = {}
+        self.non_local_items = {}
+
+        # Parse options to figure out which dungeon items will be where
+        self.assign_dungeon_item_groups()
+
+    # Group where the dungeon items will go
+    # Local, non-local
+    def assign_dungeon_item_groups(self):
+        player = self.player
+        world = self.world
+
+        # For each type of dungeon item
         for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
             #option = getattr(world, dungeon_item)[player]
             option = self.saved_options[dungeon_item]
+
+            # Declare placing group locally
             if option == "own_world":
-                # TODO: make sure world has local items for compat, use local here
-                world.local_items[player].value |= self.item_name_groups[option.item_name_group]
+                # TODO: make sure world has local items for compat (?), use local here
+                #world.local_items[player].value |= self.item_name_groups[option.item_name_group]
+                self.local_items.value |= self.item_name_groups[option.item_name_group]
+            # Declare placing group not locally
             elif option == "different_world":
                 world.non_local_items[player].value |= self.item_name_groups[option.item_name_group]
+            # Declare placing item in a dungeon
             elif option.in_dungeon:
                 self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
+                # Declare placing item in a specific dungeon
                 if option == "original_dungeon":
                     self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
 
