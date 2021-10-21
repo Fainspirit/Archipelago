@@ -166,19 +166,20 @@ def main(args=None, callback=ERmain):
 
                 # Copy these global options
                 # TODO: move to common options?
-                getattr(worldargs, "name")[player] = settings.name
-                getattr(worldargs, "game")[player] = settings.game
+                # TODO: Settings contains the rolled values. make sure that gets passed to handle_option_values
+                #getattr(worldargs, "name")[player] = settings.name
+                #getattr(worldargs, "game")[player] = settings.game
 
                 # For each option, copy it to entrance randomizer args, overwriting existing values
-                # ...Except we don't do this any more, so comment it!
-                # for k, v in vars(settings).items():
-                #     if v is not None:
-                #         try:
-                #             getattr(worldargs, k)[player] = v
-                #         except AttributeError:
-                #             setattr(worldargs, k, {player: v})
-                #         except Exception as e:
-                #             raise Exception(f"Error setting {k} to {v} for player {player}") from e
+                for k, v in vars(settings).items():
+                    if v is not None:
+                        try:
+                            getattr(worldargs, k)[player] = v
+                        except AttributeError:
+                            setattr(worldargs, k, {player: v})
+                        except Exception as e:
+                            raise Exception(f"Error setting {k} to {v} for player {player}") from e
+
             except Exception as e:
                 raise ValueError(f"File {path} is destroyed. Please fix your yaml.") from e
         else:
