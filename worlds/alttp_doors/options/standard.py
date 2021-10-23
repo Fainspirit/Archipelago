@@ -617,7 +617,7 @@ class RandomStartItemAmount(Range):
     default = 0
 
     range_start = 0
-    range_end = 83 # All items
+    range_end = 200 #  Why not. The method to calc them caps it anyway
 
 
 options: typing.Dict[str, type(Option)] = {
