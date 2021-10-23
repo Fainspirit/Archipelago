@@ -1,14 +1,13 @@
 import collections
 import logging
-from worlds.alttp_legacy import OverworldGlitchRules
 from BaseClasses import RegionType, MultiWorld, Entrance
-from worlds.alttp_legacy.Items import ItemFactory, progression_items, item_name_groups
-from worlds.alttp_legacy.OverworldGlitchRules import overworld_glitches_rules, no_logic_rules
-from worlds.alttp_legacy.UnderworldGlitchRules import underworld_glitches_rules
-from worlds.alttp_legacy.Bosses import GanonDefeatRule
+from worlds.alttp_doors.legacy.bosses import GanonDefeatRule
+from worlds.alttp_doors.legacy.item_data import ItemFactory, progression_items, item_name_groups
+from worlds.alttp_doors.legacy.rules.overworld_glitch_rules import no_logic_rules, overworld_glitches_rules
+from worlds.alttp_doors.legacy.rules.underworld_glitch_rules import underworld_glitches_rules
 from worlds.generic.Rules import set_rule, add_rule, forbid_item, add_item_rule, item_in_locations, \
     item_name
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp_doors.options.standard import smallkey_shuffle
 
 
 def set_rules(world):
@@ -397,12 +396,13 @@ def global_rules(world, player):
     set_defeat_dungeon_boss_rule(world.get_location('Agahnim 2', player))
     ganon = world.get_location('Ganon', player)
     set_rule(ganon, lambda state: GanonDefeatRule(state, player))
-    if world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
-        add_rule(ganon, lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player))
-    elif world.goal[player] == 'ganonpedestal':
-        add_rule(world.get_location('Ganon', player), lambda state: state.can_reach('Master Sword Pedestal', 'Location', player))
-    else:
-        add_rule(ganon, lambda state: state.has_crystals(state.world.crystals_needed_for_ganon[player], player))
+    # TODO fix this
+    # if False and world.goal[player] in ['ganontriforcehunt', 'localganontriforcehunt']:
+    #     add_rule(ganon, lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player))
+    # elif world.goal[player] == 'ganonpedestal':
+    #     add_rule(world.get_location('Ganon', player), lambda state: state.can_reach('Master Sword Pedestal', 'Location', player))
+    # else:
+    #     add_rule(ganon, lambda state: state.has_crystals(state.world.crystals_needed_for_ganon[player], player))
     set_rule(world.get_entrance('Ganon Drop', player), lambda state: state.has_beam_sword(player))  # need to damage ganon to get tiles to drop
 
     set_rule(world.get_location('Flute Activation Spot', player), lambda state: state.has('Flute', player))
@@ -945,7 +945,8 @@ def set_trock_key_rules(world, player):
 
 def set_big_bomb_rules(world, player):
     # this is a mess
-    bombshop_entrance = world.get_region('Big Bomb Shop', player).entrances[0]
+    # todo maybe we need this
+    # bombshop_entrance = world.get_region('Big Bomb Shop', player).entrances[0]
     Normal_LW_entrances = ['Blinds Hideout',
                            'Bonk Fairy (Light)',
                            'Lake Hylia Fairy',
@@ -1083,7 +1084,9 @@ def set_big_bomb_rules(world, player):
     # M = Mirror
     # G = Glove
 
-    if bombshop_entrance.name in Normal_LW_entrances:
+# todo
+    bombshop_entrance = 1
+    if True or bombshop_entrance.name in Normal_LW_entrances:
         #1. basic routes
         #2. Can reach Eastern dark world some other way, mirror, get bomb, return to mirror spot, walk to pyramid: Needs mirror
         # -> M or BR

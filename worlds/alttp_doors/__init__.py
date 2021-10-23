@@ -1,139 +1,397 @@
-from worlds.AutoWorld import World
-from typing import Optional, Tuple, List, Dict, Set
+import logging
+import os
+import random
+import threading
+import typing
+
+import Patch
+from worlds.AutoWorld import World, LogicMixin
 
 from BaseClasses import Item, CollectionState, Location, MultiWorld
-from Options import Option
-from worlds.alttp_doors import memory_data
-
+from worlds.alttp import alttp_options
+from worlds.alttp_doors.generate_early.legacy import generate_early
+from worlds.alttp_doors.generate_early.process_random_starting_items import process_random_starting_items
 from worlds.alttp_doors.init.load_options import load_options
-from worlds.alttp_doors.memory_data.location_data import location_table
-from worlds.alttp_doors.memory_data.region_data import lookup_name_to_id
-from worlds.alttp_doors.legacy.item_data import item_name_groups, item_table
+from worlds.alttp_doors.legacy.dungeons import create_dungeons
+from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import link_inverted_entrances
+from worlds.alttp_doors.legacy.inverted_regions import mark_dark_world_regions, create_inverted_regions
+from worlds.alttp_doors.legacy.item_data import item_table, as_dict_item_table
+from worlds.alttp_doors.legacy.item_pool import generate_itempool
+from worlds.alttp_doors.legacy.rom import apply_rom_settings, patch_race_rom, get_hash_string, patch_enemizer, \
+    patch_rom, LocalRom, get_base_rom_path
+from worlds.alttp_doors.legacy.shop_fill import ShopSlotFill, create_shops
+from worlds.alttp_doors.memory_data.region_data import lookup_name_to_id, mark_light_world_regions, create_regions
+from worlds.alttp_doors.legacy.item_data import item_name_groups
+from worlds.alttp_doors.options.standard import smallkey_shuffle
+from worlds.alttp_doors.pre_fill.legacy import pre_fill
+from worlds.alttp_doors.set_rules.legacy import set_rules
+from worlds.alttp_doors.standard.sub_classes import ALttPDoorsItem
 
+lttp_doors_logger = logging.getLogger("A Link to the Past")
 
 class ALTTPDoorsWorld(World):
     """
-    The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
-    Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
-    dungeons on your quest to rescue the descendants of the seven wise men and defeat the evil
-    Ganon!
+       The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
+       Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
+       dungeons on your quest to rescue the descendents of the seven wise men and defeat the evil
+       Ganon!
+       """
+    game: str = "A Link to the Past + Doors"
+    #options = alttp_options
+    options = load_options()
+    topology_present = True
+    item_name_groups = item_name_groups
+    hint_blacklist = {"Triforce"}
 
-    Now with door randomization!
-    """
+    item_name_to_id = {name: data.item_code for name, data in item_table.items() if type(data.item_code) == int}
+    location_name_to_id = lookup_name_to_id
 
-    options: Dict[str, type(Option)] = load_options() # link your Options mapping
-    game: "A Link to the Past + Doors"  # name the game
-    topology_present: bool = True  # indicate if world type has any meaningful layout/pathing
-    all_names: Set[str] = frozenset()  # gets automatically populated with all item, item group and location names
-
-    # map names to their IDs
-    item_name_to_id: Dict[str, int] = {name: data.item_code for name, data in item_table.items() if type(data.item_code) == int}
-    location_name_to_id: Dict[str, int] = lookup_name_to_id
-
-    # maps item group names to sets of items. Example: "Weapons" -> {"Sword", "Bow"}
-    item_name_groups: Dict[str, Set[str]] = item_name_groups
-
-    # increment this every time something in your world's names/id mappings changes.
-    # While this is set to 0 in *any* AutoWorld, the entire DataPackage is considered in testing mode and will be
-    # retrieved by clients on every connection.
-    data_version: int = 1
-
-    hint_blacklist: Set[str] = frozenset({"Triforce"})  # any names that should not be hintable
-
-    # if a world is set to remote_items, then it just needs to send location checks to the server and the server
-    # sends back the items
-    # if a world is set to remote_items = False, then the server never sends an item where receiver == finder,
-    # the client finds its own items in its own world.
+    data_version = 8
     remote_items: bool = False
-
-    # If remote_start_inventory is true, the start_inventory/world.precollected_items is sent on connection,
-    # otherwise the world implementation is in charge of writing the items to their output data.
     remote_start_inventory: bool = False
 
-    # For games where after a victory it is impossible to go back in and get additional/remaining Locations checked.
-    # this forces forfeit:  auto for those games.
-    forced_auto_forfeit: bool = True
+    set_rules = set_rules
 
-    # Hide World Type from various views. Does not remove functionality.
-    hidden: bool = False
+    create_items = generate_itempool
 
-    # autoset on creation:
-    world: MultiWorld
-    player: int
+    def __init__(self, *args, **kwargs):
+        self.dungeon_local_item_names = set()
+        self.dungeon_specific_item_names = set()
+        self.rom_name_available_event = threading.Event()
+        self.has_progressive_bows = False
+        super(ALTTPDoorsWorld, self).__init__(*args, **kwargs)
 
-    # automatically generated
-    item_id_to_name: Dict[int, str]
-    location_id_to_name: Dict[int, str]
-
-    item_names: Set[str]  # set of all potential item names
-    location_names: Set[str]  # set of all potential location names
-
-    # If there is visibility in what is being sent, this is where it will be known.
-    sending_visible: bool = False
-
-    def __init__(self, world: MultiWorld, player: int):
-        self.world = world
-        self.player = player
-
-    # overridable methods that get called by Main.py, sorted by execution order
-    # can also be implemented as a classmethod and called "stage_<original_name",
-    # in that case the MultiWorld object is passed as an argument and it gets called once for the entire multiworld.
-    # An example of this can be found in alttp as stage_pre_fill
     def generate_early(self):
-        pass
+        player = self.player
+        world = self.world
+
+        # system for sharing ER layouts
+        self.er_seed = str(world.random.randint(0, 2 ** 64))
+
+        if "-" in world.shuffle[player]:
+            shuffle, seed = world.shuffle[player].split("-", 1)
+            world.shuffle[player] = shuffle
+            if shuffle == "vanilla":
+                self.er_seed = "vanilla"
+            elif seed.startswith("group-") or world.is_race:
+                self.er_seed = get_same_seed(world, (
+                    shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
+            else:  # not a race or group seed, use set seed as is.
+                self.er_seed = seed
+        elif world.shuffle[player] == "vanilla":
+            self.er_seed = "vanilla"
+        for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
+            option = getattr(world, dungeon_item)[player]
+            if option == "own_world":
+                world.local_items[player].value |= self.item_name_groups[option.item_name_group]
+            elif option == "different_world":
+                world.non_local_items[player].value |= self.item_name_groups[option.item_name_group]
+            elif option.in_dungeon:
+                self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
+                if option == "original_dungeon":
+                    self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
+
+        from worlds.alttp_doors.legacy.item_pool import difficulties
+        world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
+
+        process_random_starting_items(world.random_starting_item_amount[player], world, self.player)
 
     def create_regions(self):
-        pass
+        player = self.player
+        world = self.world
+        if world.open_pyramid[player] == 'goal':
+            world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
+                                                                'localganontriforcehunt', 'ganonpedestal'}
+        elif world.open_pyramid[player] == 'auto':
+            world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
+                                                                'localganontriforcehunt', 'ganonpedestal'} and \
+                                         (world.shuffle[player] in {'vanilla', 'dungeonssimple', 'dungeonsfull',
+                                                                    'dungeonscrossed'} or not world.shuffle_ganon)
+        else:
+            world.open_pyramid[player] = {'on': True, 'off': False, 'yes': True, 'no': False}.get(
+                world.open_pyramid[player], 'auto')
 
-    def create_items(self):
-        pass
+        world.triforce_pieces_available[player] = max(world.triforce_pieces_available[player],
+                                                      world.triforce_pieces_required[player])
 
-    def set_rules(self):
-        pass
+        if world.mode[player] != 'inverted':
+            create_regions(world, player)
+        else:
+            create_inverted_regions(world, player)
+        create_shops(world, player)
+        create_dungeons(world, player)
 
-    def generate_basic(self):
-        pass
+        if world.logic[player] not in ["noglitches", "minorglitches"] and world.shuffle[player] in \
+                {"vanilla", "dungeonssimple", "dungeonsfull", "simple", "restricted", "full"}:
+            world.fix_fake_world[player] = False
+
+        # seeded entrance shuffle
+        old_random = world.random
+        world.random = random.Random(self.er_seed)
+
+        if world.mode[player] != 'inverted':
+            from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import link_entrances
+            link_entrances(world, player)
+            mark_light_world_regions(world, player)
+        else:
+            link_inverted_entrances(world, player)
+            mark_dark_world_regions(world, player)
+
+        world.random = old_random
+        from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import plando_connect
+        plando_connect(world, player)
+
+    # This has to be here right now or crystals don't place...
+    def collect_item(self, state: CollectionState, item: Item, remove=False):
+        item_name = item.name
+        if item_name.startswith('Progressive '):
+            if remove:
+                if 'Sword' in item_name:
+                    if state.has('Golden Sword', item.player):
+                        return 'Golden Sword'
+                    elif state.has('Tempered Sword', item.player):
+                        return 'Tempered Sword'
+                    elif state.has('Master Sword', item.player):
+                        return 'Master Sword'
+                    elif state.has('Fighter Sword', item.player):
+                        return 'Fighter Sword'
+                    else:
+                        return None
+                elif 'Glove' in item.name:
+                    if state.has('Titans Mitts', item.player):
+                        return 'Titans Mitts'
+                    elif state.has('Power Glove', item.player):
+                        return 'Power Glove'
+                    else:
+                        return None
+                elif 'Shield' in item_name:
+                    if state.has('Mirror Shield', item.player):
+                        return 'Mirror Shield'
+                    elif state.has('Red Shield', item.player):
+                        return 'Red Shield'
+                    elif state.has('Blue Shield', item.player):
+                        return 'Blue Shield'
+                    else:
+                        return None
+                elif 'Bow' in item_name:
+                    if state.has('Silver Bow', item.player):
+                        return 'Silver Bow'
+                    elif state.has('Bow', item.player):
+                        return 'Bow'
+                    else:
+                        return None
+            else:
+                if 'Sword' in item_name:
+                    if state.has('Golden Sword', item.player):
+                        pass
+                    elif state.has('Tempered Sword', item.player) and self.world.difficulty_requirements[
+                        item.player].progressive_sword_limit >= 4:
+                        return 'Golden Sword'
+                    elif state.has('Master Sword', item.player) and self.world.difficulty_requirements[
+                        item.player].progressive_sword_limit >= 3:
+                        return 'Tempered Sword'
+                    elif state.has('Fighter Sword', item.player) and self.world.difficulty_requirements[
+                        item.player].progressive_sword_limit >= 2:
+                        return 'Master Sword'
+                    elif self.world.difficulty_requirements[item.player].progressive_sword_limit >= 1:
+                        return 'Fighter Sword'
+                elif 'Glove' in item_name:
+                    if state.has('Titans Mitts', item.player):
+                        return
+                    elif state.has('Power Glove', item.player):
+                        return 'Titans Mitts'
+                    else:
+                        return 'Power Glove'
+                elif 'Shield' in item_name:
+                    if state.has('Mirror Shield', item.player):
+                        return
+                    elif state.has('Red Shield', item.player) and self.world.difficulty_requirements[
+                        item.player].progressive_shield_limit >= 3:
+                        return 'Mirror Shield'
+                    elif state.has('Blue Shield', item.player) and self.world.difficulty_requirements[
+                        item.player].progressive_shield_limit >= 2:
+                        return 'Red Shield'
+                    elif self.world.difficulty_requirements[item.player].progressive_shield_limit >= 1:
+                        return 'Blue Shield'
+                elif 'Bow' in item_name:
+                    if state.has('Silver Bow', item.player):
+                        return
+                    elif state.has('Bow', item.player) and (
+                            self.world.difficulty_requirements[item.player].progressive_bow_limit >= 2
+                            or self.world.logic[item.player] == 'noglitches'
+                            or self.world.swordless[
+                                item.player]):  # modes where silver bow is always required for ganon
+                        return 'Silver Bow'
+                    elif self.world.difficulty_requirements[item.player].progressive_bow_limit >= 1:
+                        return 'Bow'
+        elif item.advancement:
+            return item_name
 
     def pre_fill(self):
-        """Optional method that is supposed to be used for special fill stages. This is run *after* plando."""
-        pass
+        pre_fill(self)
 
-    def fill_hook(cls, progitempool: List[Item], nonexcludeditempool: List[Item],
-                  localrestitempool: Dict[int, List[Item]], nonlocalrestitempool: Dict[int, List[Item]],
-                  restitempool: List[Item], fill_locations: List[Location]):
-        """Special method that gets called as part of distribute_items_restrictive (main fill).
-        This gets called once per present world type."""
-        pass
+    @classmethod
+    def stage_pre_fill(cls, world):
+        from .legacy.dungeons import fill_dungeons_restrictive
+        fill_dungeons_restrictive(cls, world)
 
-    def post_fill(self):
-        """Optional Method that is called after regular fill. Can be used to do adjustments before output generation."""
+    @classmethod
+    def stage_post_fill(cls, world):
+        ShopSlotFill(world)
 
     def generate_output(self, output_directory: str):
-        """This method gets called from a threadpool, do not use world.random here.
-        If you need any last-second randomization, use MultiWorld.slot_seeds[slot] instead."""
-        pass
+        world = self.world
+        player = self.player
+        try:
+            use_enemizer = (world.boss_shuffle[player] != 'none' or world.enemy_shuffle[player]
+                            or world.enemy_health[player] != 'default' or world.enemy_damage[player] != 'default'
+                            or world.pot_shuffle[player] or world.bush_shuffle[player]
+                            or world.killable_thieves[player])
 
-    def fill_slot_data(self) -> dict:
-        """Fill in the slot_data field in the Connected network package."""
-        return {}
+            rom = LocalRom(get_base_rom_path())
+
+            patch_rom(world, rom, player, use_enemizer)
+
+            if use_enemizer:
+                patch_enemizer(world, player, rom, world.enemizer, output_directory)
+
+            if world.is_race:
+                patch_race_rom(rom, world, player)
+
+            world.spoiler.hashes[player] = get_hash_string(rom.hash)
+
+            palettes_options = {
+                'dungeon': world.uw_palettes[player],
+                'overworld': world.ow_palettes[player],
+                'hud': world.hud_palettes[player],
+                'sword': world.sword_palettes[player],
+                'shield': world.shield_palettes[player],
+                'link': world.link_palettes[player]
+            }
+            palettes_options = {key: option.current_key for key, option in palettes_options.items()}
+
+            apply_rom_settings(rom, world.heartbeep[player].current_key,
+                               world.heartcolor[player].current_key,
+                               world.quickswap[player],
+                               world.menuspeed[player].current_key,
+                               world.music[player],
+                               world.sprite[player],
+                               palettes_options, world, player, True,
+                               reduceflashing=world.reduceflashing[player] or world.is_race,
+                               triforcehud=world.triforcehud[player].current_key)
+
+            outfilepname = f'_P{player}'
+            outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
+                if world.player_name[player] != 'Player%d' % player else ''
+
+            rompath = os.path.join(output_directory, f'AP_{world.seed_name}{outfilepname}.sfc')
+            rom.write_to_file(rompath)
+            Patch.create_patch_file(rompath, player=player, player_name=world.player_name[player])
+            os.unlink(rompath)
+            self.rom_name = rom.name
+        except:
+            raise
+        finally:
+            self.rom_name_available_event.set()  # make sure threading continues and errors are collected
 
     def modify_multidata(self, multidata: dict):
-        """For deeper modification of server multidata."""
-        pass
+        import base64
+        # wait for self.rom_name to be available.
+        self.rom_name_available_event.wait()
+        rom_name = getattr(self, "rom_name", None)
+        # we skip in case of error, so that the original error in the output thread is the one that gets raised
+        if rom_name:
+            new_name = base64.b64encode(bytes(self.rom_name)).decode()
+            payload = multidata["connect_names"][self.world.player_name[self.player]]
+            multidata["connect_names"][new_name] = payload
+            del (multidata["connect_names"][self.world.player_name[self.player]])
 
-    def get_required_client_version(self) -> Tuple[int, int, int]:
-        return 0, 1, 6
-
-    # end of ordered Main.py calls
-
-    def collect_item(self, state: CollectionState, item: Item, remove: bool = False) -> Optional[str]:
-        """Collect an item name into state. For speed reasons items that aren't logically useful get skipped.
-        Collect None to skip item.
-        :param remove: indicate if this is meant to remove from state instead of adding."""
-        if item.advancement:
-            return item.name
+    def get_required_client_version(self) -> tuple:
+        return max((0, 1, 4), super(ALTTPDoorsWorld, self).get_required_client_version())
 
     def create_item(self, name: str) -> Item:
-        """Create an item for this world type and player.
-        Warning: this may be called with self.world = None, for example by MultiServer"""
-        raise NotImplementedError
+        return ALttPDoorsItem(name, self.player, **as_dict_item_table[name])
+
+    @classmethod
+    def stage_fill_hook(cls, world, progitempool, nonexcludeditempool, localrestitempool, nonlocalrestitempool,
+                        restitempool, fill_locations):
+        trash_counts = {}
+        standard_keyshuffle_players = set()
+        for player in world.get_game_players("A Link to the Past"):
+            if world.mode[player] == 'standard' and world.smallkey_shuffle[player] \
+                    and world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
+                standard_keyshuffle_players.add(player)
+            if not world.ganonstower_vanilla[player] or \
+                    world.logic[player] in {'owglitches', 'hybridglitches', "nologic"}:
+                pass
+            elif 'triforcehunt' in world.goal[player] and ('local' in world.goal[player] or world.players == 1):
+                trash_counts[player] = world.random.randint(world.crystals_needed_for_gt[player] * 2,
+                                                            world.crystals_needed_for_gt[player] * 4)
+            else:
+                trash_counts[player] = world.random.randint(0, world.crystals_needed_for_gt[player] * 2)
+
+        # Make sure the escape small key is placed first in standard with key shuffle to prevent running out of spots
+        # TODO: this might be worthwhile to introduce as generic option for various games and then optimize it
+        if standard_keyshuffle_players:
+            viable = []
+            for location in world.get_locations():
+                if location.player in standard_keyshuffle_players \
+                        and location.item is None \
+                        and location.can_reach(world.state):
+                    viable.append(location)
+            world.random.shuffle(viable)
+            for player in standard_keyshuffle_players:
+                key = world.create_item("Small Key (Hyrule Castle)", player)
+                loc = viable.pop()
+                loc.place_locked_item(key)
+                fill_locations.remove(loc)
+            world.random.shuffle(fill_locations)
+            # TODO: investigate not creating the key in the first place
+            progitempool[:] = [item for item in progitempool if
+                               item.player not in standard_keyshuffle_players or
+                               item.name != "Small Key (Hyrule Castle)"]
+
+        if trash_counts:
+            locations_mapping = {player: [] for player in trash_counts}
+            for location in fill_locations:
+                if 'Ganons Tower' in location.name and location.player in locations_mapping:
+                    locations_mapping[location.player].append(location)
+
+            for player, trash_count in trash_counts.items():
+                gtower_locations = locations_mapping[player]
+                world.random.shuffle(gtower_locations)
+                localrest = localrestitempool[player]
+                if localrest:
+                    gt_item_pool = restitempool + localrest
+                    world.random.shuffle(gt_item_pool)
+                else:
+                    gt_item_pool = restitempool.copy()
+
+                while gtower_locations and gt_item_pool and trash_count > 0:
+                    spot_to_fill = gtower_locations.pop()
+                    item_to_place = gt_item_pool.pop()
+                    if item_to_place in localrest:
+                        localrest.remove(item_to_place)
+                    else:
+                        restitempool.remove(item_to_place)
+                    world.push_item(spot_to_fill, item_to_place, False)
+                    fill_locations.remove(spot_to_fill)  # very slow, unfortunately
+                    trash_count -= 1
+
+
+def get_same_seed(world, seed_def: tuple) -> str:
+    seeds: typing.Dict[tuple, str] = getattr(world, "__named_seeds", {})
+    if seed_def in seeds:
+        return seeds[seed_def]
+    seeds[seed_def] = str(world.random.randint(0, 2 ** 64))
+    world.__named_seeds = seeds
+    return seeds[seed_def]
+
+
+class ALttPLogic(LogicMixin):
+    def _lttp_doors_has_key(self, item, player, count: int = 1):
+        if self.world.logic[player] == 'nologic':
+            return True
+        if self.world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+            return self.can_buy_unlimited('Small Key (Universal)', player)
+        return self.prog_items[item, player] >= count

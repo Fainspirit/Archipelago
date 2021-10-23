@@ -2,16 +2,16 @@ from __future__ import annotations
 from typing import List, Optional, Set
 import logging
 
-from worlds.alttp_doors.generic.SubClasses import ALttPLocation
-from worlds.alttp_doors.generic.shop import Shop, shop_class_mapping, price_to_funny_price, ShopData, shop_table_by_location, ShopType
-from worlds.alttp_doors.legacy.Items import item_table, ItemFactory, trap_replaceable, GetBeemizerItem
+from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
+from worlds.alttp_doors.legacy.shop import Shop, shop_class_mapping, price_to_funny_price, ShopData, shop_table_by_location, ShopType
+from worlds.alttp_doors.legacy.item_data import item_table, ItemFactory, trap_replaceable, GetBeemizerItem
 from worlds.alttp_doors.options.standard import smallkey_shuffle
 
 logger = logging.getLogger("Shops")
 
 
 def FillDisabledShopSlots(world):
-    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPDoorsLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations
                                       if location.shop_slot is not None and location.shop_slot_disabled}
     for location in shop_slots:
@@ -22,7 +22,7 @@ def FillDisabledShopSlots(world):
 
 
 def ShopSlotFill(world):
-    shop_slots: Set[ALttPLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
+    shop_slots: Set[ALttPDoorsLocation] = {location for shop_locations in (shop.region.locations for shop in world.shops)
                                       for location in shop_locations if location.shop_slot is not None}
     removed = set()
     for location in shop_slots:
@@ -169,7 +169,7 @@ def create_shops(world, player: int):
             shop.add_inventory(index, *item)
             if not locked and num_slots:
                 slot_name = f"{region.name} {shop.slot_names[index]}"
-                loc = ALttPLocation(player, slot_name, address=shop_table_by_location[slot_name],
+                loc = ALttPDoorsLocation(player, slot_name, address=shop_table_by_location[slot_name],
                                     parent=region, hint_text="for sale")
                 loc.shop_slot = index
                 loc.locked = True

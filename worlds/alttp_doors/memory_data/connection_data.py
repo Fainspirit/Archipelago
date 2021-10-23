@@ -1,4 +1,7 @@
+from collections import defaultdict
+
 # Entrances that cannot be used to access a must_exit entrance - symmetrical to allow reverse lookups
+
 Must_Exit_Invalid_Connections = defaultdict(set, {
     'Dark Death Mountain Ledge (East)': {'Dark Death Mountain Ledge (West)', 'Mimic Cave'},
     'Dark Death Mountain Ledge (West)': {'Dark Death Mountain Ledge (East)', 'Mimic Cave'},

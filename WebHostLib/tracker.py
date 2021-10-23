@@ -318,7 +318,7 @@ def getPlayerTracker(tracker: UUID, tracked_team: int, tracked_player: int):
                     if ms_player == tracked_player:  # a check done by the tracked player
                         checks_done[location_to_area[location]] += 1
                         checks_done["Total"] += 1
-                        
+
     if games[tracked_player] == "A Link to the Past":
         return __renderAlttpTracker(multisave, room, locations, inventory, tracked_team, tracked_player, player_name, \
             seed_checks_in_area, checks_done)
@@ -333,7 +333,7 @@ def getPlayerTracker(tracker: UUID, tracked_team: int, tracked_player: int):
 
 
 def __renderAlttpTracker(multisave: Dict[str, Any], room: Room, locations: Dict[int, Dict[int, Tuple[int, int]]],
-        inventory: Counter, team: int, player: int, playerName: str, 
+        inventory: Counter, team: int, player: int, playerName: str,
         seed_checks_in_area: Dict[int, Dict[str, int]], checks_done: Dict[str, int]) -> str:
 
     # Note the presence of the triforce item
@@ -584,7 +584,7 @@ def __renderOoTTracker(multisave: Dict[str, Any], room: Room, locations: Dict[in
 
         if base_name == "hookshot":
             display_data['hookshot_length'] = {0: '', 1: 'H', 2: 'L'}.get(level)
-        if base_name == "wallet": 
+        if base_name == "wallet":
             display_data['wallet_size'] = {0: '99', 1: '200', 2: '500', 3: '999'}.get(level)
 
     # Determine display for bottles. Show letter if it's obtained, determine bottle count
@@ -630,10 +630,10 @@ def __renderOoTTracker(multisave: Dict[str, Any], room: Room, locations: Dict[in
         return full_name
 
     checked_locations = multisave.get("location_checks", {}).get((team, player), set()).intersection(set(locations[player]))
-    location_info = {area: {lookup_and_trim(id, area): id in checked_locations for id in range(min_id, max_id+1) if id in locations[player]} 
+    location_info = {area: {lookup_and_trim(id, area): id in checked_locations for id in range(min_id, max_id+1) if id in locations[player]}
         for area, (min_id, max_id) in area_id_ranges.items()}
     checks_done = {area: len(list(filter(lambda x: x, location_info[area].values()))) for area in area_id_ranges}
-    checks_in_area = {area: len([id for id in range(min_id, max_id+1) if id in locations[player]]) 
+    checks_in_area = {area: len([id for id in range(min_id, max_id+1) if id in locations[player]])
         for area, (min_id, max_id) in area_id_ranges.items()}
     checks_done['Total'] = sum(checks_done.values())
     checks_in_area['Total'] = sum(checks_in_area.values())
@@ -709,7 +709,7 @@ def __renderTimespinnerTracker(multisave: Dict[str, Any], room: Room, locations:
     }
 
     timespinner_location_ids = {
-        "Present": [ 
+        "Present": [
             1337000, 1337001, 1337002, 1337003, 1337004, 1337005, 1337006, 1337007, 1337008, 1337009,
             1337010, 1337011, 1337012, 1337013, 1337014, 1337015, 1337016, 1337017, 1337018, 1337019,
             1337020, 1337021, 1337022, 1337023, 1337024, 1337025, 1337026, 1337027, 1337028, 1337029,
@@ -718,8 +718,8 @@ def __renderTimespinnerTracker(multisave: Dict[str, Any], room: Room, locations:
             1337050, 1337051, 1337052, 1337053, 1337054, 1337055, 1337056, 1337057, 1337058, 1337059,
             1337060, 1337061, 1337062, 1337063, 1337064, 1337065, 1337066, 1337067, 1337068, 1337069,
             1337070, 1337071, 1337072, 1337073, 1337074, 1337075, 1337076, 1337077, 1337078, 1337079,
-            1337080, 1337081, 1337082, 1337083, 1337084, 1337085, 1337156, 1337157,          1337159, 
-            1337160, 1337161, 1337162, 1337163, 1337164, 1337165, 1337166, 1337167, 1337168, 1337169, 
+            1337080, 1337081, 1337082, 1337083, 1337084, 1337085, 1337156, 1337157,          1337159,
+            1337160, 1337161, 1337162, 1337163, 1337164, 1337165, 1337166, 1337167, 1337168, 1337169,
             1337170],
         "Past": [
             1337086, 1337087, 1337088, 1337089,

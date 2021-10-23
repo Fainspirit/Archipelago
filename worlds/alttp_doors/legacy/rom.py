@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import Utils
 from Patch import read_rom
+from worlds.alttp_doors.memory_data.memory_tools import old_location_address_to_new_location_address
 
 JAP10HASH = '03a63945398191337e896e5771f77173'
 RANDOMIZERBASEHASH = 'e397fef0e947d1bd760c68c4fe99a600'
@@ -22,23 +23,22 @@ import bsdiff4
 from typing import Optional
 
 from BaseClasses import CollectionState, Region
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.Shops import ShopType, ShopPriceType
-from worlds.alttp_legacy.Dungeons import dungeon_music_addresses
-from worlds.alttp_legacy.Regions import location_table, old_location_address_to_new_location_address
-from worlds.alttp_legacy.Text import MultiByteTextMapper, text_addresses, Credits, TextTable
-from worlds.alttp_legacy.Text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
+from worlds.alttp_doors.legacy.shop import ShopType, ShopPriceType
+from worlds.alttp_doors.legacy.dungeons import dungeon_music_addresses
+from worlds.alttp_doors.memory_data.region_data import location_table
+from worlds.alttp_doors.legacy.text import MultiByteTextMapper, text_addresses, Credits, TextTable
+from worlds.alttp_doors.legacy.text import Uncle_texts, Ganon1_texts, TavernMan_texts, Sahasrahla2_texts, Triforce_texts, \
     Blind_texts, \
     BombShop2_texts, junk_texts
 
-from worlds.alttp_legacy.Text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
+from worlds.alttp_doors.legacy.text import KingsReturn_texts, Sanctuary_texts, Kakariko_texts, Blacksmiths_texts, \
     DeathMountain_texts, \
     LostWoods_texts, WishingWell_texts, DesertPalace_texts, MountainTower_texts, LinksHouse_texts, Lumberjacks_texts, \
     SickKid_texts, FluteBoy_texts, Zora_texts, MagicShop_texts, Sahasrahla_names
 from Utils import local_path, int16_as_bytes, int32_as_bytes, snes_to_pc, is_frozen
-from worlds.alttp_legacy.Items import ItemFactory, item_table
-from worlds.alttp_legacy.EntranceShuffle import door_addresses
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp_doors.legacy.item_data import ItemFactory, item_table
+from worlds.alttp_doors.memory_data.door_data import door_addresses
+from worlds.alttp_doors.options.standard import smallkey_shuffle
 import Patch
 
 try:
@@ -782,7 +782,7 @@ def patch_rom(world, rom, player, enemized):
                             itemid = 0x33
                         elif location.item.compass:
                             itemid = 0x25
-                if world.autoworlds[player].remote_items:  # remote items does not currently work
+                if world.worlds[player].remote_items:  # remote items does not currently work
                     itemid = list(location_table.keys()).index(location.name) + 1
                     assert itemid < 0x100
                     rom.write_byte(location.player_address, 0xFF)
@@ -1644,7 +1644,7 @@ def patch_rom(world, rom, player, enemized):
     write_strings(rom, world, player)
 
     # remote items flag, does not currently work
-    rom.write_byte(0x18637C, int(world.autoworlds[player].remote_items))
+    rom.write_byte(0x18637C, int(world.worlds[player].remote_items))
 
     # set rom name
     # 21 bytes
@@ -1656,7 +1656,7 @@ def patch_rom(world, rom, player, enemized):
 
     # set player names
     for p in range(1, min(world.players, ROM_PLAYER_LIMIT) + 1):
-        rom.write_bytes(0x195FFC + ((p - 1) * 32), hud_format_text(world.player_names[p]))
+        rom.write_bytes(0x195FFC + ((p - 1) * 32), hud_format_text(world.player_name[p]))
     if world.players > ROM_PLAYER_LIMIT:
         rom.write_bytes(0x195FFC + ((ROM_PLAYER_LIMIT - 1) * 32), hud_format_text("Archipelago"))
 
@@ -2111,12 +2111,13 @@ def write_strings(rom, world, player):
         else:
             hint = dest.hint_text
         if dest.player != player:
+            from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
             if ped_hint:
-                hint += f" for {world.player_names[dest.player]}!"
-            elif type(dest) in [Region, ALttPLocationLegacy]:
-                hint += f" in {world.player_names[dest.player]}'s world"
+                hint += f" for {world.player_name[dest.player]}!"
+            elif type(dest) in [Region, ALttPDoorsLocation]:
+                hint += f" in {world.player_name[dest.player]}'s world"
             else:
-                hint += f" for {world.player_names[dest.player]}"
+                hint += f" for {world.player_name[dest.player]}"
         return hint
 
     # For hints, first we write hints about entrances, some from the inconvenient list others from all reasonable entrances.
@@ -2299,7 +2300,7 @@ def write_strings(rom, world, player):
             ' %s?' % hint_text(silverarrows[0]).replace('Ganon\'s', 'my')) if silverarrows else '?\nI think not!'
     tt['ganon_phase_3_no_silvers'] = 'Did you find the silver arrows%s' % silverarrow_hint
     tt['ganon_phase_3_no_silvers_alt'] = 'Did you find the silver arrows%s' % silverarrow_hint
-    if world.autoworlds[player].has_progressive_bows and (world.difficulty_requirements[player].progressive_bow_limit >= 2 or (
+    if world.worlds[player].has_progressive_bows and (world.difficulty_requirements[player].progressive_bow_limit >= 2 or (
             world.swordless[player] or world.logic[player] == 'noglitches')):
         prog_bow_locs = world.find_items('Progressive Bow', player)
         world.slot_seeds[player].shuffle(prog_bow_locs)
