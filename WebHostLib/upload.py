@@ -38,7 +38,7 @@ def upload_zip_to_db(zfile: zipfile.ZipFile, owner=None, meta={"race": False}, s
             slots.add(Slot(data=data, player_name=metadata["player_name"],
                            player_id=metadata["player_id"],
                            game="A Link to the Past"))
-
+        # TODO - add doors ver sometime
         elif file.filename.endswith(".apmc"):
             data = zfile.open(file, "r").read()
             metadata = json.loads(base64.b64decode(data).decode("utf-8"))

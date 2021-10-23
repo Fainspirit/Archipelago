@@ -77,7 +77,9 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     world.plando_connections = args.plando_connections.copy()
     world.required_medallions = args.required_medallions.copy()
     world.game = args.game.copy()
+
     world.set_options(args)
+
     world.player_name = args.name.copy()
     world.enemizer = args.enemizercli
     world.sprite = args.sprite.copy()
@@ -106,8 +108,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             for _ in range(count):
                 world.push_precollected(world.create_item(item_name, player))
 
-    for player in world.player_ids:
-        if player in world.get_game_players("A Link to the Past"):
+    for player in world.player_ids:# TODO REMOVE Doors
+        if player in world.get_game_players("A Link to the Past") or player in world.get_game_players("A Link to the Past + Doors"):
             # enforce pre-defined local items.
             if world.goal[player] in ["localtriforcehunt", "localganontriforcehunt"]:
                 world.local_items[player].value.add('Triforce Piece')
@@ -188,6 +190,9 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             # collect ER hint info
             er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past") if
                             world.shuffle[player] != "vanilla" or world.retro[player]}
+            # TODO REMOVE FOR DOORS
+            er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past") if
+                            world.shuffle[player] != "vanilla" or world.retro[player]}
 
             for region in world.regions:
                 if region.player in er_hint_data and region.locations:
@@ -207,8 +212,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
 
             for location in world.get_filled_locations():
                 if type(location.address) is int:
-                    main_entrance = get_entrance_to_region(location.parent_region)
-                    if location.game != "A Link to the Past":
+                    main_entrance = get_entrance_to_region(location.parent_region) #TODO FIX
+                    if location.game != "A Link to the Past" and location.game != "A Link to the Past + Doors":
                         checks_in_area[location.player]["Light World"].append(location.address)
                     elif location.parent_region.dungeon:
                         dungeonname = {'Inverted Agahnims Tower': 'Agahnims Tower',
@@ -226,6 +231,25 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             for index, take_any in enumerate(takeanyregions):
                 for region in [world.get_region(take_any, player) for player in
                                world.get_game_players("A Link to the Past") if world.retro[player]]:
+                    item = world.create_item(
+                        region.shop.inventory[(0 if take_any == "Old Man Sword Cave" else 1)]['item'],
+                        region.player)
+                    player = region.player
+                    location_id = SHOP_ID_START + total_shop_slots + index
+
+                    main_entrance = get_entrance_to_region(region)
+                    if main_entrance.parent_region.type == RegionType.LightWorld:
+                        checks_in_area[player]["Light World"].append(location_id)
+                    else:
+                        checks_in_area[player]["Dark World"].append(location_id)
+                    checks_in_area[player]["Total"] += 1
+
+                    er_hint_data[player][location_id] = main_entrance.name
+                    oldmancaves.append(((location_id, player), (item.code, player)))
+            # TODO REMOVE PLS AAAAA
+            for index, take_any in enumerate(takeanyregions):
+                for region in [world.get_region(take_any, player) for player in
+                               world.get_game_players("A Link to the Past + Doors") if world.retro[player]]:
                     item = world.create_item(
                         region.shop.inventory[(0 if take_any == "Old Man Sword Cave" else 1)]['item'],
                         region.player)
@@ -458,6 +482,17 @@ def create_playthrough(world):
             {str(location): get_path(state, location.parent_region) for sphere in collection_spheres for location in
              sphere if location.player == player})
         if player in world.get_game_players("A Link to the Past"):
+            # If Pyramid Fairy Entrance needs to be reached, also path to Big Bomb Shop
+            # Maybe move the big bomb over to the Event system instead?
+            if any(exit_path == 'Pyramid Fairy' for path in world.spoiler.paths.values() for (_, exit_path) in path):
+                if world.mode[player] != 'inverted':
+                    world.spoiler.paths[str(world.get_region('Big Bomb Shop', player))] = \
+                        get_path(state, world.get_region('Big Bomb Shop', player))
+                else:
+                    world.spoiler.paths[str(world.get_region('Inverted Big Bomb Shop', player))] = \
+                        get_path(state, world.get_region('Inverted Big Bomb Shop', player))
+        # TODO - so many of these
+        if player in world.get_game_players("A Link to the Past + Doors"):
             # If Pyramid Fairy Entrance needs to be reached, also path to Big Bomb Shop
             # Maybe move the big bomb over to the Event system instead?
             if any(exit_path == 'Pyramid Fairy' for path in world.spoiler.paths.values() for (_, exit_path) in path):

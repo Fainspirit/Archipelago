@@ -1190,7 +1190,10 @@ class Spoiler():
             try:
                 outfile.write(f'{displayname + ":":33}{res.get_current_option_name()}\n')
             except Exception as e:
-                raise e
+                # TODO This is here as right now alttp-doors uses the alttp rolling
+                # this can just be legacy later / move to better system or something
+                print(f"{displayname} could not be written to spoiler!")
+                # raise e
 
         with open(filename, 'w', encoding="utf-8-sig") as outfile:
             outfile.write(

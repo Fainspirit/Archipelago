@@ -2,14 +2,15 @@ from collections import namedtuple
 import logging
 
 from BaseClasses import Region, RegionType
-from worlds.alttp_legacy.SubClasses import ALttPLocationLegacy
-from worlds.alttp_legacy.Shops import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
-from worlds.alttp_legacy.Bosses import place_bosses
-from worlds.alttp_legacy.Dungeons import get_dungeon_item_pool_player
-from worlds.alttp_legacy.EntranceShuffle import connect_entrance
+from worlds import AutoWorld
+from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
+from worlds.alttp_doors.legacy.shop import TakeAny, total_shop_slots, set_up_shops, shuffle_shops
+from worlds.alttp_doors.legacy.bosses import place_bosses
+from worlds.alttp_doors.legacy.dungeons import get_dungeon_item_pool_player
+from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import connect_entrance
 from Fill import FillError
-from worlds.alttp_legacy.Items import ItemFactory, GetBeemizerItem
-from worlds.alttp_legacy.Options import smallkey_shuffle
+from worlds.alttp_doors.legacy.item_data import ItemFactory, GetBeemizerItem
+from worlds.alttp_doors.options.standard import smallkey_shuffle
 
 # This file sets the item pools for various modes. Timed modes and triforce hunt are enforced first, and then extra items are specified per mode to fill in the remaining space.
 # Some basic items that various modes require are placed here, including pendants and crystals. Medallion requirements for the two relevant entrances are also decided.
@@ -223,7 +224,7 @@ for diff in {'easy', 'normal', 'hard', 'expert'}:
     )
 
 
-def generate_itempool(world):
+def generate_itempool(world: AutoWorld):
     player = world.player
     world = world.world
     if world.difficulty[player] not in difficulties:
@@ -285,7 +286,7 @@ def generate_itempool(world):
     if world.goal[player] in ['triforcehunt', 'localtriforcehunt', 'icerodhunt']:
         region = world.get_region('Light World', player)
 
-        loc = ALttPLocationLegacy(player, "Murahdahla", parent=region)
+        loc = ALttPDoorsLocation(player, "Murahdahla", parent=region)
         loc.access_rule = lambda state: state.has_triforce_pieces(state.world.treasure_hunt_count[player], player)
 
         region.locations.append(loc)
@@ -355,7 +356,7 @@ def generate_itempool(world):
 
     items = ItemFactory(pool, player)
     # convert one Progressive Bow into Progressive Bow (Alt), in ID only, for ganon silvers hint text
-    if world.autoworlds[player].has_progressive_bows:
+    if world.worlds[player].has_progressive_bows:
         for item in items:
             if item.code == 0x64:  # Progressive Bow
                 item.code = 0x65  # Progressive Bow (Alt)
@@ -370,7 +371,7 @@ def generate_itempool(world):
         world.treasure_hunt_icon[player] = treasure_hunt_icon
 
     dungeon_items = [item for item in get_dungeon_item_pool_player(world, player)
-                     if item.name not in world.autoworlds[player].dungeon_local_item_names]
+                     if item.name not in world.worlds[player].dungeon_local_item_names]
 
     if world.goal[player] == 'icerodhunt':
         for item in dungeon_items:
@@ -503,7 +504,7 @@ def create_dynamic_shop_locations(world, player):
                 if item is None:
                     continue
                 if item['create_location']:
-                    loc = ALttPLocationLegacy(player, f"{shop.region.name} {shop.slot_names[i]}", parent=shop.region)
+                    loc = ALttPDoorsLocation(player, f"{shop.region.name} {shop.slot_names[i]}", parent=shop.region)
                     shop.region.locations.append(loc)
                     world.dynamic_locations.append(loc)
 
@@ -590,7 +591,7 @@ def get_pool_core(world, player: int):
 
     if want_progressives(world.random):
         pool.extend(diff.progressivebow)
-        world.autoworlds[player].has_progressive_bows = True
+        world.worlds[player].has_progressive_bows = True
     elif (swordless or logic == 'noglitches') and goal != 'icerodhunt':
         swordless_bows = ['Bow', 'Silver Bow']
         if difficulty == "easy":

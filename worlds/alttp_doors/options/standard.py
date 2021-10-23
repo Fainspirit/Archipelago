@@ -3,7 +3,7 @@ import typing
 
 from Options import Choice, Range, Option, Toggle, DefaultOnToggle
 
-
+# TODO: Modularize these, handle using init.load_options
 # Unused
 class Objective(Choice):
     option_ganon = 0
@@ -82,7 +82,7 @@ class ShopItemSlots(Range):
     range_start = 0
     range_end = 30
 
-
+# TODO make this work and hopefully kep legacy support
 class EnemyShuffle(Choice):
     """Choose the distribution of non-boss enemies. If World State is standard, Hyrule Castle
     will be left out but may have incorrect sprites"""
@@ -96,6 +96,14 @@ class EnemyShuffle(Choice):
     # Compat
     alias_false = 0
     alias_true = 1
+    alias_no = 0
+    alias_yes = 1
+    alias_off = 0
+    alias_on = 1
+
+    # Because enemizer code expects a toggle (?)
+    def __bool__(self):
+        return self.value != 0
 
 class Progressive(Choice):
     """Choose if items will progressively upgrade. Progressive items are placed
@@ -283,10 +291,12 @@ class Timer(Choice):
     option_timed_ohko = 2
     option_always_ohko = 3
     option_timed_countdown = 4
-    option_timed_visual = 5
+    option_display = 5
 
     alias_off = 0
     alias_disabled = 0
+    alias_on = 1
+    alias_enabled = 1
 
 
 class DungeonCounters(DefaultOnToggle):
@@ -428,7 +438,7 @@ class BossShuffle(Choice):
     displayname = "Boss Shuffle"
     default = 0
 
-    option_vanilla = 0
+    option_none = 0
     option_simple = 1
     option_full = 2
     option_chaos = 3
@@ -563,6 +573,8 @@ class EnemyDamage(Choice):
     option_shuffled = 1
     option_random_damage = 2
 
+    alias_default = 0
+
 
 # TODO: Numbers for the options
 class EnemyHealth(Choice):
@@ -578,6 +590,7 @@ class EnemyHealth(Choice):
     option_increased = 2
     option_armor_plated = 3
 
+    alias_default = 0
 # 22 Oct 21
 
 class DoorsDummy(Choice):
@@ -597,7 +610,16 @@ class ERDummy(Choice):
     option_1 = 1
     option_2 = 2
 
-    
+
+class RandomStartItemAmount(Range):
+    """Start with this many random items"""
+    displayname = "Random Starting Item Amount"
+    default = 0
+
+    range_start = 0
+    range_end = 83 # All items
+
+
 options: typing.Dict[str, type(Option)] = {
     "crystals_needed_for_gt": CrystalsTower,
     "crystals_needed_for_ganon": CrystalsGanon,
@@ -611,7 +633,7 @@ options: typing.Dict[str, type(Option)] = {
     "hints": Hints,
     "restrict_dungeon_item_on_boss": RestrictBossItem,
     "pot_shuffle": PotShuffle,
-    "enemy_shuffle": EnemyShuffle,
+    "enemy_shuffle": EnemyShuffle_Old,
     "killable_thieves": KillableThieves,
     "bush_shuffle": BushShuffle,
     "shop_item_slots": ShopItemSlots,
@@ -658,5 +680,7 @@ options: typing.Dict[str, type(Option)] = {
     "enemy_damage": EnemyDamage,
     "doors_dummy": DoorsDummy,
     "er_dummy": ERDummy,
+    "random_starting_item_amount": RandomStartItemAmount,
+
 
 }

@@ -3,8 +3,8 @@ from enum import unique, IntEnum
 from typing import List, Optional, Set, NamedTuple, Dict
 import logging
 
-from worlds.alttp_doors.memory_data import door_data
 from worlds.alttp_doors.legacy.item_data import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
+from worlds.alttp_doors.memory_data import door_data
 from worlds.alttp_doors.options.standard import smallkey_shuffle
 from Utils import int16_as_bytes
 from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
@@ -64,7 +64,7 @@ class Shop():
         # [id][roomID-low][roomID-high][doorID][zero][shop_config][shopkeeper_config][sram_index]
         entrances = self.region.entrances
         config = self.item_count
-        if len(entrances) == 1 and entrances[0].name in door_data:
+        if len(entrances) == 1 and entrances[0].name in door_data.door_addresses:
             door_id = door_data.door_addresses[entrances[0].name][0] + 1
         else:
             door_id = 0

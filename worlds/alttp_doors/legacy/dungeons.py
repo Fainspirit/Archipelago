@@ -1,9 +1,9 @@
 from BaseClasses import Dungeon
-from worlds.alttp_legacy.Bosses import BossFactory
+from worlds.alttp_doors.legacy.bosses import BossFactory
 from Fill import fill_restrictive
-from worlds.alttp_legacy.Items import ItemFactory
-from worlds.alttp_legacy.Regions import lookup_boss_drops
-from worlds.alttp_legacy.Options import  smallkey_shuffle
+from worlds.alttp_doors.legacy.item_data import ItemFactory
+from worlds.alttp_doors.memory_data.region_data import lookup_boss_drops
+from worlds.alttp_doors.options.standard import  smallkey_shuffle
 
 
 def create_dungeons(world, player):

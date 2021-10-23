@@ -381,6 +381,7 @@ def getPlayerTracker(tracker: UUID, tracked_team: int, tracked_player: int):
                     if ms_player == tracked_player:  # a check done by the tracked player
                         checks_done[location_to_area[location]] += 1
                         checks_done["Total"] += 1
+                        # TODO this might matter but not now
     if games[tracked_player] == "A Link to the Past":
         # Note the presence of the triforce item
         game_state = multisave.get("client_game_state", {}).get((tracked_team, tracked_player), 0)

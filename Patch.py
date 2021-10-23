@@ -13,7 +13,7 @@ import Utils
 
 current_patch_version = 2
 
-
+# TODO this might matter
 def generate_yaml(patch: bytes, metadata: Optional[dict] = None) -> bytes:
     from worlds.alttp.Rom import JAP10HASH
     patch = yaml.dump({"meta": metadata,

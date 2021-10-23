@@ -16,14 +16,14 @@ class ALttPDoorsLocation(Location):
         self._hint_text: str = hint_text
 
 
-class ALttPItem(Item):
+class ALttPDoorsItem(Item):
     game: str = "A Link to the Past - Doors"
     dungeon = None
 
     def __init__(self, name, player, advancement=False, type=None, item_code=None, pedestal_hint=None,
                  pedestal_credit=None, sick_kid_credit=None, zora_credit=None, witch_credit=None,
                  flute_boy_credit=None, hint_text=None, trap=False):
-        super(ALttPItem, self).__init__(name, advancement, item_code, player)
+        super(ALttPDoorsItem, self).__init__(name, advancement, item_code, player)
         self.type = type
         self._pedestal_hint_text = pedestal_hint
         self.pedestal_credit_text = pedestal_credit

@@ -3,7 +3,8 @@ import collections
 
 from BaseClasses import Region, Entrance, RegionType
 from .key_drop_data import key_drop_data
-from .. import location_table
+from .location_data import location_table
+from ..create_regions.legacy import _create_region
 from ..legacy.shop import shop_table_by_location_id, shop_table_by_location
 
 
@@ -324,20 +325,7 @@ def create_dungeon_region(player: int, name: str, hint: str, locations=None, exi
     return _create_region(player, name, RegionType.Dungeon, hint, locations, exits)
 
 
-def _create_region(player: int, name: str, type: RegionType, hint: str, locations=None, exits=None):
-    from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
-    ret = Region(name, type, hint, player)
-    if locations is None:
-        locations = []
-    if exits is None:
-        exits = []
 
-    for exit in exits:
-        ret.exits.append(Entrance(player, exit, ret))
-    for location in locations:
-        address, player_address, crystal, hint_text = location_table[location]
-        ret.locations.append(ALttPDoorsLocation(player, location, address, crystal, hint_text, ret, player_address))
-    return ret
 
 
 def mark_light_world_regions(world, player: int):

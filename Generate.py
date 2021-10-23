@@ -514,7 +514,8 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
                             get_choice("exit", placement),
                             get_choice("direction", placement, "both")
                         ))
-        elif ret.game == "A Link to the Past":
+                        # TODO handle all these things for doors ver!
+        elif ret.game == "A Link to the Past" or ret.game == "A Link to the Past + Doors":
             roll_alttp_settings(ret, game_weights, plando_options)
     else:
         raise Exception(f"Unsupported game {ret.game}")
@@ -622,8 +623,10 @@ def roll_alttp_settings(ret: argparse.Namespace, weights, plando_options):
 
     ret.item_functionality = get_choice_legacy('item_functionality', weights)
 
+    # I think this fixes the new ver crashing when using this
+    # TODO Remove temp new ver handling (assigning to boss_shuffle not shuffle_bosses)
     boss_shuffle = get_choice_legacy('boss_shuffle', weights)
-    ret.shufflebosses = get_plando_bosses(boss_shuffle, plando_options)
+    ret.boss_shuffle = get_plando_bosses(boss_shuffle, plando_options)
 
     ret.enemy_damage = {None: 'default',
                         'default': 'default',
@@ -636,14 +639,16 @@ def roll_alttp_settings(ret: argparse.Namespace, weights, plando_options):
 
     ret.beemizer = int(get_choice_legacy('beemizer', weights, 0))
 
-    ret.timer = {'none': False,
-                 None: False,
-                 False: False,
-                 'timed': 'timed',
-                 'timed_ohko': 'timed-ohko',
-                 'ohko': 'ohko',
-                 'timed_countdown': 'timed-countdown',
-                 'display': 'display'}[get_choice_legacy('timer', weights, False)]
+    # TODO Just accept that this isn't usable right now
+    ret.timer = False
+    # ret.timer = {'none': False,
+    #              None: False,
+    #              False: False,
+    #              'timed': 'timed',
+    #              'timed_ohko': 'timed-ohko',
+    #              'ohko': 'ohko',
+    #              'timed_countdown': 'timed-countdown',
+    #              'display': 'display'}[get_choice_legacy('timer', weights, False)]
 
     ret.countdown_start_time = int(get_choice_legacy('countdown_start_time', weights, 10))
     ret.red_clock_time = int(get_choice_legacy('red_clock_time', weights, -2))
