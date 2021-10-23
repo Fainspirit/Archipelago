@@ -1191,8 +1191,8 @@ class Spoiler():
             displayname = getattr(option_obj, "displayname", option_key)
             try:
                 outfile.write(f'{displayname + ":":33}{res.get_current_option_name()}\n')
-            except:
-                raise Exception
+            except Exception as e:
+                raise e
 
         with open(filename, 'w', encoding="utf-8-sig") as outfile:
             outfile.write(
