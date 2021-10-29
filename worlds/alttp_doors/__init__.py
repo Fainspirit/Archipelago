@@ -1,44 +1,41 @@
+import random
 import logging
 import os
-import random
 import threading
 import typing
 
+from BaseClasses import Item, CollectionState
+from .standard.sub_classes import ALttPDoorsItem
+from .init.load_options import load_options
+from ..AutoWorld import World, LogicMixin
+from .options.standard import smallkey_shuffle
+from .legacy.item_data import as_dict_item_table, item_name_groups, item_table
+from .memory_data.region_data import lookup_name_to_id, create_regions, mark_light_world_regions
+from .legacy.rules.rules import set_rules
+from .legacy.item_pool import generate_itempool, difficulties
+from .legacy.shop_fill import create_shops, ShopSlotFill
+from .legacy.dungeons import create_dungeons
+from .legacy.rom import LocalRom, patch_rom, patch_race_rom, patch_enemizer, apply_rom_settings, get_hash_string, \
+    get_base_rom_path
 import Patch
-from worlds.AutoWorld import World, LogicMixin
 
-from BaseClasses import Item, CollectionState, Location, MultiWorld
-from worlds.alttp import alttp_options
-from worlds.alttp_doors.generate_early.legacy import generate_early
-from worlds.alttp_doors.generate_early.process_random_starting_items import process_random_starting_items
-from worlds.alttp_doors.init.load_options import load_options
-from worlds.alttp_doors.legacy.dungeons import create_dungeons
-from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import link_inverted_entrances
-from worlds.alttp_doors.legacy.inverted_regions import mark_dark_world_regions, create_inverted_regions
-from worlds.alttp_doors.legacy.item_data import item_table, as_dict_item_table
-from worlds.alttp_doors.legacy.item_pool import generate_itempool
-from worlds.alttp_doors.legacy.rom import apply_rom_settings, patch_race_rom, get_hash_string, patch_enemizer, \
-    patch_rom, LocalRom, get_base_rom_path
-from worlds.alttp_doors.legacy.shop_fill import ShopSlotFill, create_shops
-from worlds.alttp_doors.memory_data.region_data import lookup_name_to_id, mark_light_world_regions, create_regions
-from worlds.alttp_doors.legacy.item_data import item_name_groups
-from worlds.alttp_doors.options.standard import smallkey_shuffle
-from worlds.alttp_doors.pre_fill.legacy import pre_fill
-from worlds.alttp_doors.set_rules.legacy import set_rules
-from worlds.alttp_doors.standard.sub_classes import ALttPDoorsItem
+from .legacy.inverted_regions import create_inverted_regions, mark_dark_world_regions
+from .legacy.entrance_randomizer_shuffle import link_entrances, link_inverted_entrances, plando_connect
 
-lttp_doors_logger = logging.getLogger("A Link to the Past")
+lttp_logger = logging.getLogger("A Link to the Past + Doors")
+
 
 class ALTTPDoorsWorld(World):
     """
-       The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
-       Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
-       dungeons on your quest to rescue the descendents of the seven wise men and defeat the evil
-       Ganon!
-       """
+    The Legend of Zelda: A Link to the Past is an action/adventure game. Take on the role of
+    Link, a boy who is destined to save the land of Hyrule. Delve through three palaces and nine
+    dungeons on your quest to rescue the descendents of the seven wise men and defeat the evil
+    Ganon!
+    """
     game: str = "A Link to the Past + Doors"
-    #options = alttp_options
     options = load_options()
+    uses_local_game_options = True
+
     topology_present = True
     item_name_groups = item_name_groups
     hint_blacklist = {"Triforce"}
@@ -81,20 +78,18 @@ class ALTTPDoorsWorld(World):
         elif world.shuffle[player] == "vanilla":
             self.er_seed = "vanilla"
         for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
-            option = getattr(world, dungeon_item)[player]
+            option = self.game_settings[dungeon_item]
             if option == "own_world":
-                world.local_items[player].value |= self.item_name_groups[option.item_name_group]
+                self.game_settings["local_items"].value |= self.item_name_groups[option.item_name_group]
             elif option == "different_world":
-                world.non_local_items[player].value |= self.item_name_groups[option.item_name_group]
+                self.game_settings["non_local_items"].value |= self.item_name_groups[option.item_name_group]
             elif option.in_dungeon:
                 self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
                 if option == "original_dungeon":
                     self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
 
-        from worlds.alttp_doors.legacy.item_pool import difficulties
-        world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
-
-        process_random_starting_items(world.random_starting_item_amount[player], world, self.player)
+        #world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
+        self.game_settings["difficulty_requirements"] = difficulties[world.difficulty[player]]
 
     def create_regions(self):
         player = self.player
@@ -130,7 +125,6 @@ class ALTTPDoorsWorld(World):
         world.random = random.Random(self.er_seed)
 
         if world.mode[player] != 'inverted':
-            from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import link_entrances
             link_entrances(world, player)
             mark_light_world_regions(world, player)
         else:
@@ -138,10 +132,8 @@ class ALTTPDoorsWorld(World):
             mark_dark_world_regions(world, player)
 
         world.random = old_random
-        from worlds.alttp_doors.legacy.entrance_randomizer_shuffle import plando_connect
         plando_connect(world, player)
 
-    # This has to be here right now or crystals don't place...
     def collect_item(self, state: CollectionState, item: Item, remove=False):
         item_name = item.name
         if item_name.startswith('Progressive '):
@@ -190,8 +182,7 @@ class ALTTPDoorsWorld(World):
                     elif state.has('Master Sword', item.player) and self.world.difficulty_requirements[
                         item.player].progressive_sword_limit >= 3:
                         return 'Tempered Sword'
-                    elif state.has('Fighter Sword', item.player) and self.world.difficulty_requirements[
-                        item.player].progressive_sword_limit >= 2:
+                    elif state.has('Fighter Sword', item.player) and self.world.difficulty_requirements[item.player].progressive_sword_limit >= 2:
                         return 'Master Sword'
                     elif self.world.difficulty_requirements[item.player].progressive_sword_limit >= 1:
                         return 'Fighter Sword'
@@ -205,22 +196,18 @@ class ALTTPDoorsWorld(World):
                 elif 'Shield' in item_name:
                     if state.has('Mirror Shield', item.player):
                         return
-                    elif state.has('Red Shield', item.player) and self.world.difficulty_requirements[
-                        item.player].progressive_shield_limit >= 3:
+                    elif state.has('Red Shield', item.player) and self.world.difficulty_requirements[item.player].progressive_shield_limit >= 3:
                         return 'Mirror Shield'
-                    elif state.has('Blue Shield', item.player) and self.world.difficulty_requirements[
-                        item.player].progressive_shield_limit >= 2:
+                    elif state.has('Blue Shield', item.player)  and self.world.difficulty_requirements[item.player].progressive_shield_limit >= 2:
                         return 'Red Shield'
                     elif self.world.difficulty_requirements[item.player].progressive_shield_limit >= 1:
                         return 'Blue Shield'
                 elif 'Bow' in item_name:
                     if state.has('Silver Bow', item.player):
                         return
-                    elif state.has('Bow', item.player) and (
-                            self.world.difficulty_requirements[item.player].progressive_bow_limit >= 2
-                            or self.world.logic[item.player] == 'noglitches'
-                            or self.world.swordless[
-                                item.player]):  # modes where silver bow is always required for ganon
+                    elif state.has('Bow', item.player) and (self.world.difficulty_requirements[item.player].progressive_bow_limit >= 2
+                        or self.world.logic[item.player] == 'noglitches'
+                        or self.world.swordless[item.player]): # modes where silver bow is always required for ganon
                         return 'Silver Bow'
                     elif self.world.difficulty_requirements[item.player].progressive_bow_limit >= 1:
                         return 'Bow'
@@ -228,7 +215,40 @@ class ALTTPDoorsWorld(World):
             return item_name
 
     def pre_fill(self):
-        pre_fill(self)
+        from Fill import fill_restrictive, FillError
+        attempts = 5
+        world = self.world
+        player = self.player
+        all_state = world.get_all_state(use_cache=True)
+        crystals = [self.create_item(name) for name in ['Red Pendant', 'Blue Pendant', 'Green Pendant', 'Crystal 1', 'Crystal 2', 'Crystal 3', 'Crystal 4', 'Crystal 7', 'Crystal 5', 'Crystal 6']]
+        crystal_locations = [world.get_location('Turtle Rock - Prize', player),
+                             world.get_location('Eastern Palace - Prize', player),
+                             world.get_location('Desert Palace - Prize', player),
+                             world.get_location('Tower of Hera - Prize', player),
+                             world.get_location('Palace of Darkness - Prize', player),
+                             world.get_location('Thieves\' Town - Prize', player),
+                             world.get_location('Skull Woods - Prize', player),
+                             world.get_location('Swamp Palace - Prize', player),
+                             world.get_location('Ice Palace - Prize', player),
+                             world.get_location('Misery Mire - Prize', player)]
+        placed_prizes = {loc.item.name for loc in crystal_locations if loc.item}
+        unplaced_prizes = [crystal for crystal in crystals if crystal.name not in placed_prizes]
+        empty_crystal_locations = [loc for loc in crystal_locations if not loc.item]
+        for attempt in range(attempts):
+            try:
+                prizepool = unplaced_prizes.copy()
+                prize_locs = empty_crystal_locations.copy()
+                world.random.shuffle(prize_locs)
+                fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
+            except FillError as e:
+                lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
+                                                attempts - attempt)
+                for location in empty_crystal_locations:
+                    location.item = None
+                continue
+            break
+        else:
+            raise FillError('Unable to place dungeon prizes')
 
     @classmethod
     def stage_pre_fill(cls, world):
@@ -292,7 +312,7 @@ class ALTTPDoorsWorld(World):
         except:
             raise
         finally:
-            self.rom_name_available_event.set()  # make sure threading continues and errors are collected
+            self.rom_name_available_event.set() # make sure threading continues and errors are collected
 
     def modify_multidata(self, multidata: dict):
         import base64

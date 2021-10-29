@@ -118,6 +118,12 @@ class World(metaclass=AutoWorldRegister):
     # If there is visibility in what is being sent, this is where it will be known.
     sending_visible: bool = False
 
+    """Indicates if the world supports fully local game option handling"""
+    uses_local_game_options = False
+
+    """Saved values for options (used with 'uses_local_game-options')"""
+    game_settings = {}
+
     def __init__(self, world: MultiWorld, player: int):
         self.world = world
         self.player = player

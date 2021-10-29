@@ -126,7 +126,7 @@ def fill_dungeons_restrictive(autoworld, world):
     """Places dungeon-native items into their dungeons, places nothing if everything is shuffled outside."""
     localized: set = set()
     dungeon_specific: set = set()
-    for subworld in world.get_game_worlds("A Link to the Past"):
+    for subworld in world.get_game_worlds("A Link to the Past + Doors"):
         player = subworld.player
         localized |= {(player, item_name) for item_name in
                       subworld.dungeon_local_item_names}

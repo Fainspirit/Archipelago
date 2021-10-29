@@ -145,13 +145,36 @@ class MultiWorld():
         for player in self.player_ids:
             self.custom_data[player] = {}
             world_type = AutoWorld.AutoWorldRegister.world_types[self.game[player]]
-            for option_key in world_type.options:
-                setattr(self, option_key, getattr(args, option_key, {}))
+
+            # Create the player's world
+            self.worlds[player] = world_type(self, player)
+            player_world = self.worlds[player]
+
+
+            # Store all game related options on the world if supported
+            if world_type.uses_local_game_options:
+                ##player_world.selected_options = {} # Defaults to this no need to reset
+                player_options = player_world.game_settings
+
+                # Store options locally and remove from world
+                for option_key in world_type.options:
+                    player_options[option_key] = getattr(args, option_key)[player]
+                    getattr(args, option_key)[player] = None
+                for option_key in Options.per_game_common_options:
+                    player_options[option_key] = getattr(args, option_key)[player]
+                    getattr(args, option_key)[player] = None
+
+            # Otherwise store them on the world (legacy behavior)
+            else:
+                for option_key in world_type.options:
+                    setattr(self, option_key, getattr(args, option_key, {}))
+                for option_key in Options.per_game_common_options:
+                    setattr(self, option_key, getattr(args, option_key, {}))
+
+            # Common options should always be saved on the world
             for option_key in Options.common_options:
                 setattr(self, option_key, getattr(args, option_key, {}))
-            for option_key in Options.per_game_common_options:
-                setattr(self, option_key, getattr(args, option_key, {}))
-            self.worlds[player] = world_type(self, player)
+
 
     # intended for unittests
     def set_default_common_options(self):
