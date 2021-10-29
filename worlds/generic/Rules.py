@@ -51,7 +51,11 @@ def forbid_item(location, item: str, player: int):
 
 def forbid_items_for_player(location, items: typing.Set[str], player: int):
     old_rule = location.item_rule
-    location.item_rule = lambda i: (i.player != player or i.name not in items) and old_rule(i)
+    try:
+        location.item_rule = lambda i: (i.player != player or i.name not in items) and old_rule(i)
+    except Exception as e:
+        raise e
+
 
 
 def forbid_items(location, items: typing.Set[str]):

@@ -191,7 +191,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past") if
                             world.shuffle[player] != "vanilla" or world.retro[player]}
             # TODO REMOVE FOR DOORS
-            er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past") if
+            er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past + Doors") if
                             world.shuffle[player] != "vanilla" or world.retro[player]}
 
             for region in world.regions:
