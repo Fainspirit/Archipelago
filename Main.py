@@ -210,7 +210,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                             world.shuffle[player] != "vanilla" or world.retro[player]}
             # TODO REMOVE FOR DOORS
             er_hint_data = {player: {} for player in world.get_game_players("A Link to the Past + Doors") if
-                            world.shuffle[player] != "vanilla" or world.retro[player]}
+                            world.shuffle[player] != "vanilla" or world.worlds[player].game_settings["retro"]}
 
             for region in world.regions:
                 if region.player in er_hint_data and region.locations:
@@ -267,7 +267,7 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             # TODO REMOVE PLS AAAAA
             for index, take_any in enumerate(takeanyregions):
                 for region in [world.get_region(take_any, player) for player in
-                               world.get_game_players("A Link to the Past + Doors") if world.retro[player]]:
+                               world.get_game_players("A Link to the Past + Doors") if world.worlds[player].game_settings["retro"]]:
                     item = world.create_item(
                         region.shop.inventory[(0 if take_any == "Old Man Sword Cave" else 1)]['item'],
                         region.player)

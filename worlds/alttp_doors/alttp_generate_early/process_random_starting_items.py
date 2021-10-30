@@ -4,7 +4,11 @@ from BaseClasses import MultiWorld
 from worlds.alttp_doors.legacy.item_pool import get_pool_core, generate_itempool
 
 # TODO - make this somehow be able to work off an existing pool (with all copies of everything). Maybe move it later and set the precollected items manually
-def process_random_starting_items(amount: int, world: MultiWorld, player: int):
+def handle_random_starting_items(autoworld):
+    amount = autoworld.game_settings["random_starting_item_amount"]
+    player = autoworld.player
+    world = autoworld.world
+    
     # Invalid starting items
     invalid_items = ["Triforce Piece", "Red Clock", "Blue Clock", "Green Clock",
                      "Small Heart", "Power Star", "Faerie", "Bee Trap", "Nothing",

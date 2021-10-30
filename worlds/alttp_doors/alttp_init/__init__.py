@@ -1,0 +1,1 @@
+"""autoworld initialization methods"""
