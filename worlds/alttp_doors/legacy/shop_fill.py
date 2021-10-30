@@ -117,11 +117,11 @@ def ShopSlotFill(world):
                     if 'P' in world.shop_shuffle[location.player]:
                         price_to_funny_price(shop.inventory[location.shop_slot], world, location.player)
 
-
-def create_shops(world, player: int):
+# TODO make sure this works sometime
+def create_shops(world, autoworld, player: int):
     from worlds.alttp_doors.legacy.shop import shop_table, _basic_shop_defaults, _dark_world_shop_defaults, _inverted_hylia_shop_defaults, total_dynamic_shop_slots
-
-    option = world.shop_shuffle[player]
+    return
+    option = autoworld.game_settings["shop_shuffle"]
 
     player_shop_table = shop_table.copy()
     if "w" in option:
@@ -130,7 +130,7 @@ def create_shops(world, player: int):
     else:
         dynamic_shop_slots = total_dynamic_shop_slots
 
-    num_slots = min(dynamic_shop_slots, world.shop_item_slots[player])
+    num_slots = min(dynamic_shop_slots, autoworld.game_settings["shop_item_slots"])
     single_purchase_slots: List[bool] = [True] * num_slots + [False] * (dynamic_shop_slots - num_slots)
     world.random.shuffle(single_purchase_slots)
 

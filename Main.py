@@ -103,23 +103,37 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
 
     logger.info('')
 
+    # Push starting inventory
     for player in world.player_ids:
-        for item_name, count in world.start_inventory[player].value.items():
+        if world.worlds[player].uses_local_game_settings:
+            i = world.worlds[player].game_settings["start_inventory"].value.items()
+        else:
+            i = world.start_inventory[player].value.items()
+        for item_name, count in i:
             for _ in range(count):
                 world.push_precollected(world.create_item(item_name, player))
 
     for player in world.player_ids:# TODO REMOVE Doors
         if player in world.get_game_players("A Link to the Past") or player in world.get_game_players("A Link to the Past + Doors"):
             # enforce pre-defined local items.
-            if world.goal[player] in ["localtriforcehunt", "localganontriforcehunt"]:
-                world.local_items[player].value.add('Triforce Piece')
+            if world.worlds[player].uses_local_game_settings:
+                local = world.worlds[player].game_settings["local_items"]
+                non_local = world.worlds[player].game_settings["non_local_items"]
+                goal = world.worlds[player].game_settings["goal"]
+            else:
+                local = world.local_items[player]
+                non_local = world.non_local_items[player]
+                goal = world.goal[player]
+
+            if goal in ["localtriforcehunt", "localganontriforcehunt"]:
+                local.value.add('Triforce Piece')
 
             # Not possible to place pendants/crystals out side of boss prizes yet.
-            world.non_local_items[player].value -= item_name_groups['Pendants']
-            world.non_local_items[player].value -= item_name_groups['Crystals']
+            non_local.value -= item_name_groups['Pendants']
+            non_local.value -= item_name_groups['Crystals']
 
         # items can't be both local and non-local, prefer local
-        world.non_local_items[player].value -= world.local_items[player].value
+        non_local.value -= local.value
 
     logger.info('Creating World.')
     AutoWorld.call_all(world, "create_regions")
@@ -138,7 +152,11 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
     AutoWorld.call_all(world, "set_rules")
 
     for player in world.player_ids:
-        exclusion_rules(world, player, world.exclude_locations[player].value)
+        if world.worlds[player].uses_local_game_settings:
+            locations = world.worlds[player].game_settings["exclude_locations"]
+        else:
+            locations = world.exclude_locations[player]
+        exclusion_rules(world, player, locations.value)
 
     AutoWorld.call_all(world, "generate_basic")
 

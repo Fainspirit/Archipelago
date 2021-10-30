@@ -9,16 +9,23 @@ else:
     CollectionRule = typing.Callable[[object], bool]
     ItemRule = typing.Callable[[object], bool]
 
-
 def locality_rules(world, player: int):
-    if world.local_items[player].value:
+
+    if world.worlds[player].uses_local_game_settings:
+        local = world.worlds[player].game_settings["local_items"]
+        non_local = world.worlds[player].game_settings["non_local_items"]
+    else:
+        local = world.local_items[player]
+        non_local = world.non_local_items[player]
+
+    if local.value:
         for location in world.get_locations():
             if location.player != player:
-                forbid_items_for_player(location, world.local_items[player].value, player)
-    if world.non_local_items[player].value:
+                forbid_items_for_player(location, local.value, player)
+    if non_local.value:
         for location in world.get_locations():
             if location.player == player:
-                forbid_items_for_player(location, world.non_local_items[player].value, player)
+                forbid_items_for_player(location, non_local.value, player)
 
 
 def exclusion_rules(world, player: int, exclude_locations: typing.Set[str]):

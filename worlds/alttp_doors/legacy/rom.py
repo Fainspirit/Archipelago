@@ -8,6 +8,7 @@ JAP10HASH = '03a63945398191337e896e5771f77173'
 RANDOMIZERBASEHASH = 'e397fef0e947d1bd760c68c4fe99a600'
 ROM_PLAYER_LIMIT = 255
 
+# TODO - fix this whole file to use local settings
 import io
 import json
 import hashlib
@@ -757,6 +758,8 @@ def patch_rom(world, rom, player, enemized):
 
     # patch items
 
+    # TODO: Fix this to maybe read local locations
+    # instead of iterating the entire location list
     for location in world.get_locations():
         if location.player != player or location.address is None or location.shop_slot is not None:
             continue
@@ -1015,7 +1018,10 @@ def patch_rom(world, rom, player, enemized):
     # Byrna residual magic cost
     rom.write_bytes(0x45C42, [0x04, 0x02, 0x01])
 
-    difficulty = world.difficulty_requirements[player]
+    if world.worlds[player].uses_local_game_settings:
+        difficulty = world.worlds[player].game_settings["difficulty_requirements"]
+    else:
+        difficulty = world.difficulty_requirements[player]
 
     # Set overflow items for progressive equipment
     rom.write_bytes(0x180090,
@@ -1476,8 +1482,15 @@ def patch_rom(world, rom, player, enemized):
     else:
         rom.write_byte(0x18003E, 0x03)  # make ganon invincible until all crystals and aga 2 are collected
 
-    rom.write_byte(0x18005E, world.crystals_needed_for_gt[player])
-    rom.write_byte(0x18005F, world.crystals_needed_for_ganon[player])
+    if world.worlds[player].uses_local_game_settings:
+        gt_crystals = world.worlds[player].game_settings["crystals_needed_for_gt"]
+        ganon_crystals = world.worlds[player].game_settings["crystals_needed_for_ganon"]
+    else:
+        gt_crystals = world.crystals_needed_for_gt[player]
+        ganon_crystals = world.crystals_needed_for_ganon[player]
+
+    rom.write_byte(0x18005E, gt_crystals)
+    rom.write_byte(0x18005F, ganon_crystals)
 
     # Bitfield - enable text box to show with free roaming items
     #
@@ -2300,8 +2313,8 @@ def write_strings(rom, world, player):
             ' %s?' % hint_text(silverarrows[0]).replace('Ganon\'s', 'my')) if silverarrows else '?\nI think not!'
     tt['ganon_phase_3_no_silvers'] = 'Did you find the silver arrows%s' % silverarrow_hint
     tt['ganon_phase_3_no_silvers_alt'] = 'Did you find the silver arrows%s' % silverarrow_hint
-    if world.worlds[player].has_progressive_bows and (world.difficulty_requirements[player].progressive_bow_limit >= 2 or (
-            world.swordless[player] or world.logic[player] == 'noglitches')):
+    if world.worlds[player].has_progressive_bows and (world.worlds[player].game_settings["difficulty_requirements"].progressive_bow_limit >= 2 or (
+            world.worlds[player].game_settings['swordless'] or world.worlds[player].game_settings['logic'] == 'noglitches')):
         prog_bow_locs = world.find_items('Progressive Bow', player)
         world.slot_seeds[player].shuffle(prog_bow_locs)
         found_bow = False

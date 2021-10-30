@@ -6,10 +6,10 @@ from worlds.alttp_doors.memory_data.region_data import lookup_boss_drops
 from worlds.alttp_doors.options.standard import  smallkey_shuffle
 
 
-def create_dungeons(world, player):
+def create_dungeons(world, autoworld, player):
     def make_dungeon(name, default_boss, dungeon_regions, big_key, small_keys, dungeon_items):
         dungeon = Dungeon(name, dungeon_regions, big_key,
-                          [] if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal else small_keys,
+                          [] if autoworld.game_settings["smallkey_shuffle"] == smallkey_shuffle.option_universal else small_keys,
                           dungeon_items, player)
         for item in dungeon.all_items:
             item.dungeon = dungeon

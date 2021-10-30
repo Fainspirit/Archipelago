@@ -119,7 +119,7 @@ class World(metaclass=AutoWorldRegister):
     sending_visible: bool = False
 
     """Indicates if the world supports fully local game option handling"""
-    uses_local_game_options = False
+    uses_local_game_settings = False
 
     """Saved values for options (used with 'uses_local_game-options')"""
     game_settings = {}
