@@ -1406,7 +1406,7 @@ def patch_rom(world, rom, player, enemized):
             for address in keys[item.name]:
                 equip[address] = min(equip[address] + 1, 99)
         elif item.name in bottles:
-            if equip[0x34F] < world.difficulty_requirements[player].progressive_bottle_limit:
+            if equip[0x34F] < world.worlds[player].game_settings["difficulty_requirements"].progressive_bottle_limit:
                 equip[0x35C + equip[0x34F]] = bottles[item.name]
                 equip[0x34F] += 1
         elif item.name in rupees:

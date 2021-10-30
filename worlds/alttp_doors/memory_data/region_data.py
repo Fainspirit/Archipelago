@@ -4,7 +4,7 @@ import collections
 from BaseClasses import Region, Entrance, RegionType
 from .key_drop_data import key_drop_data
 from .location_data import location_table
-from ..create_regions.legacy import _create_region
+from ..alttp_create_regions.legacy import _create_region
 from ..legacy.shop import shop_table_by_location_id, shop_table_by_location
 
 

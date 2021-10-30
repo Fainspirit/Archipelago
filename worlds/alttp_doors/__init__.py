@@ -6,7 +6,7 @@ import typing
 
 from BaseClasses import Item, CollectionState
 from .standard.sub_classes import ALttPDoorsItem
-from .init.load_options import load_options
+from .alttp_init.load_options import load_options
 from ..AutoWorld import World, LogicMixin
 from .options.standard import smallkey_shuffle
 from .legacy.item_data import as_dict_item_table, item_name_groups, item_table
@@ -49,7 +49,7 @@ class ALTTPDoorsWorld(World):
 
     set_rules = set_rules
 
-    create_items = generate_itempool
+    #create_items = generate_itempool
 
     def __init__(self, *args, **kwargs):
         self.dungeon_local_item_names = set()
@@ -61,6 +61,12 @@ class ALTTPDoorsWorld(World):
     def generate_early(self):
         player = self.player
         world = self.world
+
+        import worlds.alttp_doors.alttp_generate_early
+        alttp_generate_early.handle_assured_sword(self)
+        alttp_generate_early.handle_vanilla_sword_placement(self)
+        alttp_generate_early.handle_glitch_boots(self)
+        alttp_generate_early.handle_random_starting_items(self)
 
         # system for sharing ER layouts
         self.er_seed = str(world.random.randint(0, 2 ** 64))
@@ -94,6 +100,15 @@ class ALTTPDoorsWorld(World):
     def create_regions(self):
         player = self.player
         world = self.world
+
+        import worlds.alttp_doors.alttp_create_regions
+        alttp_create_regions.handle_base_regions(self)
+        alttp_create_regions.handle_pyramid_open(self)
+        alttp_create_regions.handle_pot_shuffle(self)
+        alttp_create_regions.handle_shop_main_pool_shuffle(self)
+        alttp_create_regions.handle_hybrid_major_glitches_regions(self)
+
+
         if world.open_pyramid[player] == 'goal':
             world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
                                                                 'localganontriforcehunt', 'ganonpedestal'}
@@ -133,6 +148,25 @@ class ALTTPDoorsWorld(World):
 
         world.random = old_random
         plando_connect(world, player)
+
+    def create_items(self):
+        generate_itempool(self)
+
+        import worlds.alttp_doors.alttp_create_items
+        alttp_create_items.handle_progressive(self)
+        alttp_create_items.handle_difficulty(self)
+        alttp_create_items.handle_swords(self)
+        alttp_create_items.handle_timed_clocks(self)
+        alttp_create_items.handle_capacity_upgrades(self)
+        alttp_create_items.handle_shops(self)
+        alttp_create_items.handle_retro_mode(self)
+        alttp_create_items.handle_junk(self)
+        alttp_create_items.handle_beemizer(self)
+        alttp_create_items.handle_key_drop_shuffle(self)
+
+        alttp_create_items.handle_custom_pool(self)
+        alttp_create_items.handle_item_groups(self)
+
 
     def modify_multidata(self, multidata: dict):
         """For deeper modification of server multidata."""

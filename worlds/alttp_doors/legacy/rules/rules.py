@@ -13,6 +13,8 @@ from worlds.alttp_doors.options.standard import smallkey_shuffle
 def set_rules(world):
     player = world.player
     world = world.world
+    # TODO fix rules
+    return
     if world.logic[player] == 'nologic':
         logging.info(
             'WARNING! Seeds generated under this logic often require major glitches and may be impossible!')
@@ -232,7 +234,7 @@ def global_rules(world, player):
     ep_prize = world.get_location('Eastern Palace - Prize', player)
     set_rule(ep_prize, lambda state: state.has('Big Key (Eastern Palace)', player) and
                                      ep_prize.parent_region.dungeon.boss.can_defeat(state))
-    if not world.enemy_shuffle[player]:
+    if not world.worlds[player].game_settings["enemy_shuffle"]:
         add_rule(ep_boss, lambda state: state.can_shoot_arrows(player))
         add_rule(ep_prize, lambda state: state.can_shoot_arrows(player))
 
@@ -243,10 +245,10 @@ def global_rules(world, player):
     set_rule(world.get_location('Desert Palace - Boss', player), lambda state: state._lttp_has_key('Small Key (Desert Palace)', player) and state.has('Big Key (Desert Palace)', player) and state.has_fire_source(player) and state.world.get_location('Desert Palace - Boss', player).parent_region.dungeon.boss.can_defeat(state))
 
     # logic patch to prevent placing a crystal in Desert that's required to reach the required keys
-    if not (world.smallkey_shuffle[player] and world.bigkey_shuffle[player]):
+    if not (world.worlds[player].game_settings["smallkey_shuffle"] and world.worlds[player].game_settings["bigkey_shuffle"]):
         add_rule(world.get_location('Desert Palace - Prize', player), lambda state: state.world.get_region('Desert Palace Main (Outer)', player).can_reach(state))
 
-    set_rule(world.get_entrance('Tower of Hera Small Key Door', player), lambda state: state._lttp_has_key('Small Key (Tower of Hera)', player) or item_name(state, 'Tower of Hera - Big Key Chest', player) == ('Small Key (Tower of Hera)', player))
+    set_rule(world.get_entrance('Tower of Hera Small Key Door', player), lambda state: state._lttp_doors_has_key('Small Key (Tower of Hera)', player) or item_name(state, 'Tower of Hera - Big Key Chest', player) == ('Small Key (Tower of Hera)', player))
     set_rule(world.get_entrance('Tower of Hera Big Key Door', player), lambda state: state.has('Big Key (Tower of Hera)', player))
     set_rule(world.get_location('Tower of Hera - Big Chest', player), lambda state: state.has('Big Key (Tower of Hera)', player))
     set_rule(world.get_location('Tower of Hera - Big Key Chest', player), lambda state: state.has_fire_source(player))
@@ -254,13 +256,13 @@ def global_rules(world, player):
         set_always_allow(world.get_location('Tower of Hera - Big Key Chest', player), lambda state, item: item.name == 'Small Key (Tower of Hera)' and item.player == player)
 
     set_rule(world.get_entrance('Swamp Palace Moat', player), lambda state: state.has('Flippers', player) and state.has('Open Floodgate', player))
-    set_rule(world.get_entrance('Swamp Palace Small Key Door', player), lambda state: state._lttp_has_key('Small Key (Swamp Palace)', player))
+    set_rule(world.get_entrance('Swamp Palace Small Key Door', player), lambda state: state._lttp_doors_has_key('Small Key (Swamp Palace)', player))
     set_rule(world.get_entrance('Swamp Palace (Center)', player), lambda state: state.has('Hammer', player))
     set_rule(world.get_location('Swamp Palace - Big Chest', player), lambda state: state.has('Big Key (Swamp Palace)', player) or item_name(state, 'Swamp Palace - Big Chest', player) == ('Big Key (Swamp Palace)', player))
     if world.accessibility[player] != 'locations':
         set_always_allow(world.get_location('Swamp Palace - Big Chest', player), lambda state, item: item.name == 'Big Key (Swamp Palace)' and item.player == player)
     set_rule(world.get_entrance('Swamp Palace (North)', player), lambda state: state.has('Hookshot', player))
-    if not world.smallkey_shuffle[player] and world.logic[player] not in ['hybridglitches', 'nologic']:
+    if not world.worlds[player].game_settings["smallkey_shuffle"] and world.worlds[player].game_settings["logic"] not in ['hybridglitches', 'nologic']:
         forbid_item(world.get_location('Swamp Palace - Entrance', player), 'Big Key (Swamp Palace)', player)
 
     set_rule(world.get_entrance('Thieves Town Big Key Door', player), lambda state: state.has('Big Key (Thieves Town)', player))
