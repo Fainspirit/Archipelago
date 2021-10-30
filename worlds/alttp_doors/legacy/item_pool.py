@@ -515,7 +515,7 @@ def create_dynamic_shop_locations(world, player):
                     loc.event = True
                     loc.locked = True
 
-
+# TODO this does not work right so fix it by rewrite
 def get_pool_core(world, player: int):
     shuffle = world.shuffle[player]
     difficulty = world.difficulty[player]
@@ -545,9 +545,9 @@ def get_pool_core(world, player: int):
         precollected_items.append('Pegasus Boots')
         pool.remove('Pegasus Boots')
         pool.append('Rupees (20)')
-    want_progressives = world.progressive[player].want_progressives
+    want_progressives = world.worlds[player].game_settings["progressive"]
 
-    if want_progressives(world.random):
+    if want_progressives:
         pool.extend(diff.progressiveglove)
     else:
         pool.extend(diff.basicglove)
@@ -574,22 +574,22 @@ def get_pool_core(world, player: int):
             thisbottle = world.random.choice(diff.bottles)
         pool.append(thisbottle)
 
-    if want_progressives(world.random):
+    if want_progressives:
         pool.extend(diff.progressiveshield)
     else:
         pool.extend(diff.basicshield)
 
-    if want_progressives(world.random):
+    if want_progressives:
         pool.extend(diff.progressivearmor)
     else:
         pool.extend(diff.basicarmor)
 
-    if want_progressives(world.random):
+    if want_progressives:
         pool.extend(diff.progressivemagic)
     else:
         pool.extend(diff.basicmagic)
 
-    if want_progressives(world.random):
+    if want_progressives:
         pool.extend(diff.progressivebow)
         world.worlds[player].has_progressive_bows = True
     elif (swordless or logic == 'noglitches') and goal != 'icerodhunt':
@@ -603,7 +603,7 @@ def get_pool_core(world, player: int):
     if swordless:
         pool.extend(diff.swordless)
     else:
-        progressive_swords = want_progressives(world.random)
+        progressive_swords = want_progressives
         pool.extend(diff.progressivesword if progressive_swords else diff.basicsword)
 
     extraitems = total_items_to_place - len(pool) - len(placed_items)

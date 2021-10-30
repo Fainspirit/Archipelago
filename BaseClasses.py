@@ -151,7 +151,7 @@ class MultiWorld():
 
 
             # Store all game related options on the world if supported
-            if world_type.uses_local_game_options:
+            if world_type.uses_local_game_settings:
                 ##player_world.selected_options = {} # Defaults to this no need to reset
                 player_options = player_world.game_settings
 
@@ -159,9 +159,12 @@ class MultiWorld():
                 for option_key in world_type.options:
                     player_options[option_key] = getattr(args, option_key)[player]
                     getattr(args, option_key)[player] = None
+
                 for option_key in Options.per_game_common_options:
                     player_options[option_key] = getattr(args, option_key)[player]
-                    getattr(args, option_key)[player] = None
+                    # Don't remove these for now (breaks world logic that expects global local_items
+                    # TODO maybe remove these
+                    # getattr(args, option_key)[player] = None
 
             # Otherwise store them on the world (legacy behavior)
             else:
@@ -631,7 +634,10 @@ class CollectionState(object):
 
     def heart_count(self, player: int) -> int:
         # Warning: This only considers items that are marked as advancement items
-        diff = self.world.difficulty_requirements[player]
+        if self.world.worlds[player].uses_local_game_settings:
+            diff = self.world.worlds[player].game_settings["difficulty_requirements"]
+        else:
+            diff = self.world.difficulty_requirements[player]
         return min(self.item_count('Boss Heart Container', player), diff.boss_heart_container_limit) \
                + self.item_count('Sanctuary Heart Container', player) \
                + min(self.item_count('Piece of Heart', player), diff.heart_piece_limit) // 4 \
@@ -1208,7 +1214,10 @@ class Spoiler():
             return 'Yes' if variable else 'No'
 
         def write_option(option_key: str, option_obj: type(Options.Option)):
-            res = getattr(self.world, option_key)[player]
+            if option_key not in Options.common_options and self.world.worlds[player].uses_local_game_settings:
+                res = self.world.worlds[player].game_settings[option_key]
+            else:
+                res = getattr(self.world, option_key)[player]
             displayname = getattr(option_obj, "displayname", option_key)
             try:
                 outfile.write(f'{displayname + ":":33}{res.get_current_option_name()}\n')

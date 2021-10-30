@@ -34,7 +34,7 @@ class ALTTPDoorsWorld(World):
     """
     game: str = "A Link to the Past + Doors"
     options = load_options()
-    uses_local_game_options = True
+    uses_local_game_settings = True
 
     topology_present = True
     item_name_groups = item_name_groups
@@ -113,8 +113,8 @@ class ALTTPDoorsWorld(World):
             create_regions(world, player)
         else:
             create_inverted_regions(world, player)
-        create_shops(world, player)
-        create_dungeons(world, player)
+        create_shops(world, self, player)
+        create_dungeons(world, self, player)
 
         if world.logic[player] not in ["noglitches", "minorglitches"] and world.shuffle[player] in \
                 {"vanilla", "dungeonssimple", "dungeonsfull", "simple", "restricted", "full"}:
@@ -133,6 +133,10 @@ class ALTTPDoorsWorld(World):
 
         world.random = old_random
         plando_connect(world, player)
+
+    def modify_multidata(self, multidata: dict):
+        """For deeper modification of server multidata."""
+        pass
 
     def collect_item(self, state: CollectionState, item: Item, remove=False):
         item_name = item.name
@@ -176,15 +180,13 @@ class ALTTPDoorsWorld(World):
                 if 'Sword' in item_name:
                     if state.has('Golden Sword', item.player):
                         pass
-                    elif state.has('Tempered Sword', item.player) and self.world.difficulty_requirements[
-                        item.player].progressive_sword_limit >= 4:
+                    elif state.has('Tempered Sword', item.player) and self.game_settings["difficulty_requirements"].progressive_sword_limit >= 4:
                         return 'Golden Sword'
-                    elif state.has('Master Sword', item.player) and self.world.difficulty_requirements[
-                        item.player].progressive_sword_limit >= 3:
+                    elif state.has('Master Sword', item.player) and self.game_settings["difficulty_requirements"].progressive_sword_limit >= 3:
                         return 'Tempered Sword'
-                    elif state.has('Fighter Sword', item.player) and self.world.difficulty_requirements[item.player].progressive_sword_limit >= 2:
+                    elif state.has('Fighter Sword', item.player) and self.game_settings["difficulty_requirements"].progressive_sword_limit >= 2:
                         return 'Master Sword'
-                    elif self.world.difficulty_requirements[item.player].progressive_sword_limit >= 1:
+                    elif self.game_settings["difficulty_requirements"].progressive_sword_limit >= 1:
                         return 'Fighter Sword'
                 elif 'Glove' in item_name:
                     if state.has('Titans Mitts', item.player):
@@ -196,20 +198,20 @@ class ALTTPDoorsWorld(World):
                 elif 'Shield' in item_name:
                     if state.has('Mirror Shield', item.player):
                         return
-                    elif state.has('Red Shield', item.player) and self.world.difficulty_requirements[item.player].progressive_shield_limit >= 3:
+                    elif state.has('Red Shield', item.player) and self.game_settings["difficulty_requirements"].progressive_shield_limit >= 3:
                         return 'Mirror Shield'
-                    elif state.has('Blue Shield', item.player)  and self.world.difficulty_requirements[item.player].progressive_shield_limit >= 2:
+                    elif state.has('Blue Shield', item.player)  and self.game_settings["difficulty_requirements"].progressive_shield_limit >= 2:
                         return 'Red Shield'
-                    elif self.world.difficulty_requirements[item.player].progressive_shield_limit >= 1:
+                    elif self.game_settings["difficulty_requirements"].progressive_shield_limit >= 1:
                         return 'Blue Shield'
                 elif 'Bow' in item_name:
                     if state.has('Silver Bow', item.player):
                         return
-                    elif state.has('Bow', item.player) and (self.world.difficulty_requirements[item.player].progressive_bow_limit >= 2
+                    elif state.has('Bow', item.player) and (self.game_settings["difficulty_requirements"].progressive_bow_limit >= 2
                         or self.world.logic[item.player] == 'noglitches'
                         or self.world.swordless[item.player]): # modes where silver bow is always required for ganon
                         return 'Silver Bow'
-                    elif self.world.difficulty_requirements[item.player].progressive_bow_limit >= 1:
+                    elif self.game_settings["difficulty_requirements"].progressive_bow_limit >= 1:
                         return 'Bow'
         elif item.advancement:
             return item_name
@@ -281,24 +283,24 @@ class ALTTPDoorsWorld(World):
             world.spoiler.hashes[player] = get_hash_string(rom.hash)
 
             palettes_options = {
-                'dungeon': world.uw_palettes[player],
-                'overworld': world.ow_palettes[player],
-                'hud': world.hud_palettes[player],
-                'sword': world.sword_palettes[player],
-                'shield': world.shield_palettes[player],
-                'link': world.link_palettes[player]
+                'dungeon': world.worlds[player].game_settings["uw_palettes"],
+                'overworld': world.worlds[player].game_settings["ow_palettes"],
+                'hud': world.worlds[player].game_settings["hud_palettes"],
+                'sword': world.worlds[player].game_settings["sword_palettes"],
+                'shield': world.worlds[player].game_settings["shield_palettes"],
+                'link': world.worlds[player].game_settings["link_palettes"],
             }
             palettes_options = {key: option.current_key for key, option in palettes_options.items()}
 
-            apply_rom_settings(rom, world.heartbeep[player].current_key,
-                               world.heartcolor[player].current_key,
-                               world.quickswap[player],
-                               world.menuspeed[player].current_key,
-                               world.music[player],
-                               world.sprite[player],
+            apply_rom_settings(rom, world.worlds[player].game_settings["heartbeep"].current_key,
+                               world.worlds[player].game_settings["heartcolor"].current_key,
+                               world.worlds[player].game_settings["quickswap"],
+                               world.worlds[player].game_settings["menuspeed"].current_key,
+                               world.worlds[player].game_settings["music"],
+                               world.worlds[player].game_settings["sprite"],
                                palettes_options, world, player, True,
-                               reduceflashing=world.reduceflashing[player] or world.is_race,
-                               triforcehud=world.triforcehud[player].current_key)
+                               reduceflashing=world.worlds[player].game_settings["reduceflashing"] or world.is_race,
+                               triforcehud=world.worlds[player].game_settings["triforcehud"].current_key)
 
             outfilepname = f'_P{player}'
             outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
@@ -315,6 +317,8 @@ class ALTTPDoorsWorld(World):
             self.rom_name_available_event.set() # make sure threading continues and errors are collected
 
     def modify_multidata(self, multidata: dict):
+        # This exists for client support
+        multidata["games"][self.player] = "A Link to the Past"
         import base64
         # wait for self.rom_name to be available.
         self.rom_name_available_event.wait()

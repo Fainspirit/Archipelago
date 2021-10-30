@@ -279,7 +279,7 @@ class TriforceHud(Choice):
     option_hide_required = 2
     option_hide_both = 3
 
-# Newly migrated as of 20 Cct 2021
+# Newly migrated as of 20 Oct 2021
 
 class Timer(Choice):
     """Add a timer to the game UI, and cause it to have various effects."""
@@ -619,6 +619,18 @@ class RandomStartItemAmount(Range):
     range_start = 0
     range_end = 200 #  Why not. The method to calc them caps it anyway
 
+# 30 Oct 2021
+
+class Sprite(Choice):
+    """Replace Link's sprite with this one"""
+    displayname = "Sprite"
+    default = "link"
+
+    option_link = "link"
+    option_freya = "freya"
+    option_mipha = "mipha"
+    option_medli = "medli"
+
 
 options: typing.Dict[str, type(Option)] = {
     "crystals_needed_for_gt": CrystalsTower,
@@ -681,6 +693,6 @@ options: typing.Dict[str, type(Option)] = {
     "doors_dummy": DoorsDummy,
     "er_dummy": ERDummy,
     "random_starting_item_amount": RandomStartItemAmount,
-
+    "sprite": Sprite,
 
 }
