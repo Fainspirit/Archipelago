@@ -225,6 +225,7 @@ for diff in {'easy', 'normal', 'hard', 'expert'}:
 
 
 def generate_itempool(world: AutoWorld):
+    return
     player = world.player
     world = world.world
     if world.difficulty[player] not in difficulties:
