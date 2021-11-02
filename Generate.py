@@ -514,8 +514,7 @@ def roll_settings(weights: dict, plando_options: typing.Set[str] = frozenset(("b
                             get_choice("exit", placement),
                             get_choice("direction", placement, "both")
                         ))
-                        # TODO handle all these things for doors ver!
-        elif ret.game == "A Link to the Past" or ret.game == "A Link to the Past + Doors":
+        elif ret.game == "A Link to the Past":
             roll_alttp_settings(ret, game_weights, plando_options)
     else:
         raise Exception(f"Unsupported game {ret.game}")
