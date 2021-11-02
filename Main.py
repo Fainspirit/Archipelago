@@ -114,16 +114,17 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                 world.push_precollected(world.create_item(item_name, player))
 
     for player in world.player_ids:
+        if world.worlds[player].uses_local_game_settings:
+            local = world.worlds[player].game_settings["local_items"]
+            non_local = world.worlds[player].game_settings["non_local_items"]
+            goal = world.worlds[player].game_settings["goal"]
+        else:
+            local = world.local_items[player]
+            non_local = world.non_local_items[player]
+            goal = world.goal[player]
+
         if player in world.get_game_players("A Link to the Past"):
             # enforce pre-defined local items.
-            if world.worlds[player].uses_local_game_settings:
-                local = world.worlds[player].game_settings["local_items"]
-                non_local = world.worlds[player].game_settings["non_local_items"]
-                goal = world.worlds[player].game_settings["goal"]
-            else:
-                local = world.local_items[player]
-                non_local = world.non_local_items[player]
-                goal = world.goal[player]
 
             if goal in ["localtriforcehunt", "localganontriforcehunt"]:
                 local.value.add('Triforce Piece')
@@ -146,8 +147,14 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
         for player in world.player_ids:
             locality_rules(world, player)
     else:
-        world.non_local_items[1].value = set()
-        world.local_items[1].value = set()
+
+        # Temporary?
+        # TODO decide if this stays
+        world.non_local_items = [{}, {}]
+        world.local_items = [{}, {}]
+
+        world.non_local_items[1] = set()
+        world.local_items[1] = set()
 
     AutoWorld.call_all(world, "set_rules")
 
