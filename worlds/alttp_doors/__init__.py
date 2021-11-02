@@ -150,7 +150,8 @@ class ALTTPDoorsWorld(World):
         # plando_connect(world, player)
 
     def create_items(self):
-        generate_itempool(self)
+        # generate_itempool(self)
+        self.item_pool = []
 
         import worlds.alttp_doors.alttp_create_items
         alttp_create_items.handle_progressive(self)
@@ -166,6 +167,8 @@ class ALTTPDoorsWorld(World):
 
         alttp_create_items.handle_custom_pool(self)
         alttp_create_items.handle_item_groups(self)
+
+        self.world.itempool += self.item_pool
 
 
     def modify_multidata(self, multidata: dict):
