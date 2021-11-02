@@ -8,7 +8,7 @@ from BaseClasses import Item, CollectionState
 from .standard.sub_classes import ALttPDoorsItem
 from .alttp_init.load_options import load_options
 from ..AutoWorld import World, LogicMixin
-from .options.standard import smallkey_shuffle
+from .options.standard import SmallkeyShuffle
 from .legacy.item_data import as_dict_item_table, item_name_groups, item_table
 from .memory_data.region_data import lookup_name_to_id, create_regions, mark_light_world_regions
 from .legacy.rules.rules import set_rules
@@ -43,7 +43,7 @@ class ALTTPDoorsWorld(World):
     item_name_to_id = {name: data.item_code for name, data in item_table.items() if type(data.item_code) == int}
     location_name_to_id = lookup_name_to_id
 
-    data_version = 8
+    data_version = 9 # Acting as if moving from standard alttp
     remote_items: bool = False
     remote_start_inventory: bool = False
 
@@ -68,34 +68,34 @@ class ALTTPDoorsWorld(World):
         alttp_generate_early.handle_glitch_boots(self)
         alttp_generate_early.handle_random_starting_items(self)
 
-        # system for sharing ER layouts
-        self.er_seed = str(world.random.randint(0, 2 ** 64))
-
-        if "-" in world.shuffle[player]:
-            shuffle, seed = world.shuffle[player].split("-", 1)
-            world.shuffle[player] = shuffle
-            if shuffle == "vanilla":
-                self.er_seed = "vanilla"
-            elif seed.startswith("group-") or world.is_race:
-                self.er_seed = get_same_seed(world, (
-                    shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
-            else:  # not a race or group seed, use set seed as is.
-                self.er_seed = seed
-        elif world.shuffle[player] == "vanilla":
-            self.er_seed = "vanilla"
-        for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
-            option = self.game_settings[dungeon_item]
-            if option == "own_world":
-                self.game_settings["local_items"].value |= self.item_name_groups[option.item_name_group]
-            elif option == "different_world":
-                self.game_settings["non_local_items"].value |= self.item_name_groups[option.item_name_group]
-            elif option.in_dungeon:
-                self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
-                if option == "original_dungeon":
-                    self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
-
-        #world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
-        self.game_settings["difficulty_requirements"] = difficulties[world.difficulty[player]]
+        # # system for sharing ER layouts
+        # self.er_seed = str(world.random.randint(0, 2 ** 64))
+        #
+        # if "-" in world.shuffle[player]:
+        #     shuffle, seed = world.shuffle[player].split("-", 1)
+        #     world.shuffle[player] = shuffle
+        #     if shuffle == "vanilla":
+        #         self.er_seed = "vanilla"
+        #     elif seed.startswith("group-") or world.is_race:
+        #         self.er_seed = get_same_seed(world, (
+        #             shuffle, seed, world.retro[player], world.mode[player], world.logic[player]))
+        #     else:  # not a race or group seed, use set seed as is.
+        #         self.er_seed = seed
+        # elif world.shuffle[player] == "vanilla":
+        #     self.er_seed = "vanilla"
+        # for dungeon_item in ["smallkey_shuffle", "bigkey_shuffle", "compass_shuffle", "map_shuffle"]:
+        #     option = self.game_settings[dungeon_item]
+        #     if option == "own_world":
+        #         self.game_settings["local_items"].value |= self.item_name_groups[option.item_name_group]
+        #     elif option == "different_world":
+        #         self.game_settings["non_local_items"].value |= self.item_name_groups[option.item_name_group]
+        #     elif option.in_dungeon:
+        #         self.dungeon_local_item_names |= self.item_name_groups[option.item_name_group]
+        #         if option == "original_dungeon":
+        #             self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
+        #
+        # #world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
+        # self.game_settings["difficulty_requirements"] = difficulties[world.difficulty[player]]
 
     def create_regions(self):
         player = self.player
@@ -109,45 +109,45 @@ class ALTTPDoorsWorld(World):
         alttp_create_regions.handle_hybrid_major_glitches_regions(self)
 
 
-        if world.open_pyramid[player] == 'goal':
-            world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
-                                                                'localganontriforcehunt', 'ganonpedestal'}
-        elif world.open_pyramid[player] == 'auto':
-            world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
-                                                                'localganontriforcehunt', 'ganonpedestal'} and \
-                                         (world.shuffle[player] in {'vanilla', 'dungeonssimple', 'dungeonsfull',
-                                                                    'dungeonscrossed'} or not world.shuffle_ganon)
-        else:
-            world.open_pyramid[player] = {'on': True, 'off': False, 'yes': True, 'no': False}.get(
-                world.open_pyramid[player], 'auto')
-
-        world.triforce_pieces_available[player] = max(world.triforce_pieces_available[player],
-                                                      world.triforce_pieces_required[player])
-
-        if world.mode[player] != 'inverted':
-            create_regions(world, player)
-        else:
-            create_inverted_regions(world, player)
-        create_shops(world, self, player)
-        create_dungeons(world, self, player)
-
-        if world.logic[player] not in ["noglitches", "minorglitches"] and world.shuffle[player] in \
-                {"vanilla", "dungeonssimple", "dungeonsfull", "simple", "restricted", "full"}:
-            world.fix_fake_world[player] = False
-
-        # seeded entrance shuffle
-        old_random = world.random
-        world.random = random.Random(self.er_seed)
-
-        if world.mode[player] != 'inverted':
-            link_entrances(world, player)
-            mark_light_world_regions(world, player)
-        else:
-            link_inverted_entrances(world, player)
-            mark_dark_world_regions(world, player)
-
-        world.random = old_random
-        plando_connect(world, player)
+        # if world.open_pyramid[player] == 'goal':
+        #     world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
+        #                                                         'localganontriforcehunt', 'ganonpedestal'}
+        # elif world.open_pyramid[player] == 'auto':
+        #     world.open_pyramid[player] = world.goal[player] in {'crystals', 'ganontriforcehunt',
+        #                                                         'localganontriforcehunt', 'ganonpedestal'} and \
+        #                                  (world.shuffle[player] in {'vanilla', 'dungeonssimple', 'dungeonsfull',
+        #                                                             'dungeonscrossed'} or not world.shuffle_ganon)
+        # else:
+        #     world.open_pyramid[player] = {'on': True, 'off': False, 'yes': True, 'no': False}.get(
+        #         world.open_pyramid[player], 'auto')
+        #
+        # world.triforce_pieces_available[player] = max(world.triforce_pieces_available[player],
+        #                                               world.triforce_pieces_required[player])
+        #
+        # if world.mode[player] != 'inverted':
+        #     create_regions(world, player)
+        # else:
+        #     create_inverted_regions(world, player)
+        # create_shops(world, self, player)
+        # create_dungeons(world, self, player)
+        #
+        # if world.logic[player] not in ["noglitches", "minorglitches"] and world.shuffle[player] in \
+        #         {"vanilla", "dungeonssimple", "dungeonsfull", "simple", "restricted", "full"}:
+        #     world.fix_fake_world[player] = False
+        #
+        # # seeded entrance shuffle
+        # old_random = world.random
+        # world.random = random.Random(self.er_seed)
+        #
+        # if world.mode[player] != 'inverted':
+        #     link_entrances(world, player)
+        #     mark_light_world_regions(world, player)
+        # else:
+        #     link_inverted_entrances(world, player)
+        #     mark_dark_world_regions(world, player)
+        #
+        # world.random = old_random
+        # plando_connect(world, player)
 
     def create_items(self):
         generate_itempool(self)
@@ -251,90 +251,93 @@ class ALTTPDoorsWorld(World):
             return item_name
 
     def pre_fill(self):
-        from Fill import fill_restrictive, FillError
-        attempts = 5
-        world = self.world
-        player = self.player
-        all_state = world.get_all_state(use_cache=True)
-        crystals = [self.create_item(name) for name in ['Red Pendant', 'Blue Pendant', 'Green Pendant', 'Crystal 1', 'Crystal 2', 'Crystal 3', 'Crystal 4', 'Crystal 7', 'Crystal 5', 'Crystal 6']]
-        crystal_locations = [world.get_location('Turtle Rock - Prize', player),
-                             world.get_location('Eastern Palace - Prize', player),
-                             world.get_location('Desert Palace - Prize', player),
-                             world.get_location('Tower of Hera - Prize', player),
-                             world.get_location('Palace of Darkness - Prize', player),
-                             world.get_location('Thieves\' Town - Prize', player),
-                             world.get_location('Skull Woods - Prize', player),
-                             world.get_location('Swamp Palace - Prize', player),
-                             world.get_location('Ice Palace - Prize', player),
-                             world.get_location('Misery Mire - Prize', player)]
-        placed_prizes = {loc.item.name for loc in crystal_locations if loc.item}
-        unplaced_prizes = [crystal for crystal in crystals if crystal.name not in placed_prizes]
-        empty_crystal_locations = [loc for loc in crystal_locations if not loc.item]
-        for attempt in range(attempts):
-            try:
-                prizepool = unplaced_prizes.copy()
-                prize_locs = empty_crystal_locations.copy()
-                world.random.shuffle(prize_locs)
-                fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
-            except FillError as e:
-                lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
-                                                attempts - attempt)
-                for location in empty_crystal_locations:
-                    location.item = None
-                continue
-            break
-        else:
-            raise FillError('Unable to place dungeon prizes')
+        pass
+        # from Fill import fill_restrictive, FillError
+        # attempts = 5
+        # world = self.world
+        # player = self.player
+        # all_state = world.get_all_state(use_cache=True)
+        # crystals = [self.create_item(name) for name in ['Red Pendant', 'Blue Pendant', 'Green Pendant', 'Crystal 1', 'Crystal 2', 'Crystal 3', 'Crystal 4', 'Crystal 7', 'Crystal 5', 'Crystal 6']]
+        # crystal_locations = [world.get_location('Turtle Rock - Prize', player),
+        #                      world.get_location('Eastern Palace - Prize', player),
+        #                      world.get_location('Desert Palace - Prize', player),
+        #                      world.get_location('Tower of Hera - Prize', player),
+        #                      world.get_location('Palace of Darkness - Prize', player),
+        #                      world.get_location('Thieves\' Town - Prize', player),
+        #                      world.get_location('Skull Woods - Prize', player),
+        #                      world.get_location('Swamp Palace - Prize', player),
+        #                      world.get_location('Ice Palace - Prize', player),
+        #                      world.get_location('Misery Mire - Prize', player)]
+        # placed_prizes = {loc.item.name for loc in crystal_locations if loc.item}
+        # unplaced_prizes = [crystal for crystal in crystals if crystal.name not in placed_prizes]
+        # empty_crystal_locations = [loc for loc in crystal_locations if not loc.item]
+        # for attempt in range(attempts):
+        #     try:
+        #         prizepool = unplaced_prizes.copy()
+        #         prize_locs = empty_crystal_locations.copy()
+        #         world.random.shuffle(prize_locs)
+        #         fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
+        #     except FillError as e:
+        #         lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
+        #                                         attempts - attempt)
+        #         for location in empty_crystal_locations:
+        #             location.item = None
+        #         continue
+        #     break
+        # else:
+        #     raise FillError('Unable to place dungeon prizes')
 
     @classmethod
     def stage_pre_fill(cls, world):
-        from .legacy.dungeons import fill_dungeons_restrictive
-        fill_dungeons_restrictive(cls, world)
+        pass
+        # from .legacy.dungeons import fill_dungeons_restrictive
+        # fill_dungeons_restrictive(cls, world)
 
     @classmethod
     def stage_post_fill(cls, world):
-        ShopSlotFill(world)
+        pass
+        # ShopSlotFill(world)
 
     def generate_output(self, output_directory: str):
         world = self.world
         player = self.player
         try:
-            use_enemizer = (world.boss_shuffle[player] != 'none' or world.enemy_shuffle[player]
-                            or world.enemy_health[player] != 'default' or world.enemy_damage[player] != 'default'
-                            or world.pot_shuffle[player] or world.bush_shuffle[player]
-                            or world.killable_thieves[player])
+            # use_enemizer = (world.boss_shuffle[player] != 'none' or world.enemy_shuffle[player]
+            #                 or world.enemy_health[player] != 'default' or world.enemy_damage[player] != 'default'
+            #                 or world.pot_shuffle[player] or world.bush_shuffle[player]
+            #                 or world.killable_thieves[player])
 
             rom = LocalRom(get_base_rom_path())
-
-            patch_rom(world, rom, player, use_enemizer)
-
-            if use_enemizer:
-                patch_enemizer(world, player, rom, world.enemizer, output_directory)
-
-            if world.is_race:
-                patch_race_rom(rom, world, player)
-
-            world.spoiler.hashes[player] = get_hash_string(rom.hash)
+            #
+            # patch_rom(world, rom, player, use_enemizer)
+            #
+            # if use_enemizer:
+            #     patch_enemizer(world, player, rom, world.enemizer, output_directory)
+            #
+            # if world.is_race:
+            #     patch_race_rom(rom, world, player)
+            #
+            # world.spoiler.hashes[player] = get_hash_string(rom.hash)
 
             palettes_options = {
-                'dungeon': world.worlds[player].game_settings["uw_palettes"],
-                'overworld': world.worlds[player].game_settings["ow_palettes"],
-                'hud': world.worlds[player].game_settings["hud_palettes"],
-                'sword': world.worlds[player].game_settings["sword_palettes"],
-                'shield': world.worlds[player].game_settings["shield_palettes"],
-                'link': world.worlds[player].game_settings["link_palettes"],
+                'dungeon': self.game_settings["uw_palettes"],
+                'overworld': self.game_settings["ow_palettes"],
+                'hud': self.game_settings["hud_palettes"],
+                'sword': self.game_settings["sword_palettes"],
+                'shield': self.game_settings["shield_palettes"],
+                'link': self.game_settings["link_palettes"],
             }
             palettes_options = {key: option.current_key for key, option in palettes_options.items()}
 
-            apply_rom_settings(rom, world.worlds[player].game_settings["heartbeep"].current_key,
-                               world.worlds[player].game_settings["heartcolor"].current_key,
-                               world.worlds[player].game_settings["quickswap"],
-                               world.worlds[player].game_settings["menuspeed"].current_key,
-                               world.worlds[player].game_settings["music"],
-                               world.worlds[player].game_settings["sprite"],
+            apply_rom_settings(rom, self.game_settings["heartbeep"].current_key,
+                               self.game_settings["heartcolor"].current_key,
+                               self.game_settings["quickswap"],
+                               self.game_settings["menuspeed"].current_key,
+                               self.game_settings["music"],
+                               self.game_settings["sprite"],
                                palettes_options, world, player, True,
-                               reduceflashing=world.worlds[player].game_settings["reduceflashing"] or world.is_race,
-                               triforcehud=world.worlds[player].game_settings["triforcehud"].current_key)
+                               reduceflashing=self.game_settings["reduceflashing"] or world.is_race,
+                               triforcehud=self.game_settings["triforcehud"].current_key)
 
             outfilepname = f'_P{player}'
             outfilepname += f"_{world.player_name[player].replace(' ', '_')}" \
@@ -376,8 +379,8 @@ class ALTTPDoorsWorld(World):
         trash_counts = {}
         standard_keyshuffle_players = set()
         for player in world.get_game_players("A Link to the Past"):
-            if world.mode[player] == 'standard' and world.smallkey_shuffle[player] \
-                    and world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
+            if world.mode[player] == 'standard' and world.SmallkeyShuffle[player] \
+                    and world.SmallkeyShuffle[player] != SmallkeyShuffle.option_universal:
                 standard_keyshuffle_players.add(player)
             if not world.ganonstower_vanilla[player] or \
                     world.logic[player] in {'owglitches', 'hybridglitches', "nologic"}:
@@ -450,6 +453,6 @@ class ALttPLogic(LogicMixin):
     def _lttp_doors_has_key(self, item, player, count: int = 1):
         if self.world.logic[player] == 'nologic':
             return True
-        if self.world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+        if self.world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal:
             return self.can_buy_unlimited('Small Key (Universal)', player)
         return self.prog_items[item, player] >= count

@@ -27,7 +27,7 @@ def handle_random_starting_items(autoworld):
         amount))
     new_items = {}
 
-    existing = world.start_inventory[player].value
+    existing = autoworld.game_settings["start_inventory"].value
     for name in chosen_items:
         if name in new_items:
             new_items[name] += 1
@@ -35,7 +35,7 @@ def handle_random_starting_items(autoworld):
             new_items[name] = 1
 
     existing |= new_items
-    world.start_inventory[player].value = existing
-
+    autoworld.game_settings["start_inventory"].value = existing
+    pass
 
 

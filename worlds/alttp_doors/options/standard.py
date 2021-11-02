@@ -30,26 +30,26 @@ class DungeonItem(Choice):
         return self.value in {0, 1}
 
 
-class bigkey_shuffle(DungeonItem):
+class BigkeyShuffle(DungeonItem):
     """Choose where big keys will be placed."""
     item_name_group = "Big Keys"
     displayname = "Big Key Shuffle"
 
 
-class smallkey_shuffle(DungeonItem):
+class SmallkeyShuffle(DungeonItem):
     """Choose where small keys will be placed."""
     option_universal = 5
     item_name_group = "Small Keys"
     displayname = "Small Key Shuffle"
 
 
-class compass_shuffle(DungeonItem):
+class CompassShuffle(DungeonItem):
     """Choose where compasses will be placed."""
     item_name_group = "Compasses"
     displayname = "Compass Shuffle"
 
 
-class map_shuffle(DungeonItem):
+class MapShuffle(DungeonItem):
     """Choose where maps will be placed."""
     item_name_group = "Maps"
     displayname = "Map Shuffle"
@@ -76,7 +76,7 @@ class CrystalsGanon(Crystals):
 
 class ShopItemSlots(Range):
     """Choose how many shop slots will be added to the pool"""
-    """Shop Slots"""
+    displayname = "Shop Item Slots"
     default = 0
 
     range_start = 0
@@ -113,7 +113,7 @@ class Progressive(Choice):
     default = 2
 
     option_off = 0
-    option_grouped_random = 1
+    option_random_for_each = 1
     option_on = 2
 
     alias_false = 0
@@ -172,7 +172,7 @@ class TileShuffle(Toggle):
     displayname = "Tile Shuffle"
 
 
-class PotShuffle(Toggle):
+class PotLocationShuffle(Toggle):
     """Shuffle contents of pots within "supertiles" (item will still be nearby original placement)."""
     displayname = "Pot Shuffle"
 
@@ -224,6 +224,8 @@ class LinkPalette(Palette):
 class HeartBeep(Choice):
     """Choose how frequently the low health beep will play."""
     displayname = "Heart Beep Rate"
+    default = 2
+
     option_normal = 0
     option_double = 1
     option_half = 2
@@ -261,7 +263,7 @@ class MenuSpeed(Choice):
 
 class Music(DefaultOnToggle):
     """Play the game's background music."""
-    displayname = "Play music"
+    displayname = "Play Music"
 
 
 class ReduceFlashing(DefaultOnToggle):
@@ -319,6 +321,8 @@ class Logic(Choice):
     option_overworld_glitches = 2
     option_hybrid_major_glitches = 3
     option_no_logic = 4
+
+    alias_ng = 0
     alias_owg = 2
     alias_hmg = 3
 
@@ -329,7 +333,7 @@ class Goal(Choice):
     default = 0
 
     option_kill_ganon = 0
-    option_kill_ganon_and_gt_agahnim = 1
+    option_kill_ganon_and_agahnim_2 = 1
     option_fast_ganon = 2
     option_pedestal = 3
     option_ganon_pedestal = 4
@@ -357,9 +361,9 @@ class Goal(Choice):
 
 
 class WorldState(Choice):
-    """Choose the initial state of the world. \n\n
+    """Choose the initial state of the world. \n
     Open skips the castle escape
-    sequence where you free Zelda. \n\n
+    sequence where you free Zelda. \n
     Inverted begins in the Dark World and inverts
     the Magic Mirror, as well as some terrain changes to ensure accessibility."""
     displayname = "World State"
@@ -370,10 +374,15 @@ class WorldState(Choice):
     option_inverted = 2
 
 
-class OpenPyramid(Toggle):
+class OpenPyramid(Choice):
     """Open the Dark World pyramid before defeating Agahnim atop Ganon's Tower."""
     displayname = "Open Pyramid"
+    default = 0
 
+    option_goal = 0
+    option_auto = 1
+    option_yes = 2
+    option_no = 3
 
 class CountdownStartingTime(Range):
     """The initial value in minutes of the countdown timer if enabled"""
@@ -492,13 +501,13 @@ class ShopShufflePools(Choice):
 
 class ShopShuffleIncludePotionShop(Toggle):
     """Include the potion shop in shop shuffle pools"""
-    displayname = "Shuffle Potion Shop?"
+    displayname = "Shuffle Potion Shop"
 
 
 # TODO: May not actually be possible
 class ShopShuffleIncludeLakeFairy(Toggle):
     """Includes the Great Fairy of Lake Hylia in shop shuffle pools"""
-    displayname = "Shuffle Lake Fairy?"
+    displayname = "Shuffle Lake Fairy"
 
 
 class ShuffleCapacityUpgrades(Toggle):
@@ -582,7 +591,7 @@ class EnemyHealth(Choice):
     Reduced: Generally reduced health.\n
     Increased: Generally increased health.\n
     Armor-Plated: Greatly increased health.\n"""
-    displayname = "Enemy Damage"
+    displayname = "Enemy Health"
     default = 0
 
     option_vanilla = 0
@@ -593,23 +602,6 @@ class EnemyHealth(Choice):
     alias_default = 0
 # 22 Oct 21
 
-class DoorsDummy(Choice):
-    """Description"""
-    displayname = "Doors Dummy"
-
-    option_0 = 0
-    option_1 = 1
-    option_2 = 2
-
-
-class ERDummy(Choice):
-    """Description"""
-    displayname = "ER Dummy"
-
-    option_0 = 0
-    option_1 = 1
-    option_2 = 2
-
 
 class RandomStartItemAmount(Range):
     """Start with this many random items"""
@@ -617,9 +609,10 @@ class RandomStartItemAmount(Range):
     default = 0
 
     range_start = 0
-    range_end = 200 #  Why not. The method to calc them caps it anyway
+    range_end = 50 # Arbitrarily chosen
 
 # 30 Oct 2021
+
 
 class Sprite(Choice):
     """Replace Link's sprite with this one"""
@@ -631,68 +624,201 @@ class Sprite(Choice):
     option_mipha = "mipha"
     option_medli = "medli"
 
+# 2 Nov 2021
+
+
+class GlitchBoots(DefaultOnToggle):
+    """Start with boots in glitched logic modes that use them"""
+    displayname = "Glitch Boots"
+
+
+class DarkRoomLogic(Choice):
+    """Logic used for unlit dark rooms"""
+    displayname = "Dark Room Logic"
+    default = 0
+
+    option_lamp = 0
+    option_torches = 1
+    option_none = 2
+
+
+# TODO - group seeds
+class EntranceShuffle(Choice):
+    """How entrances will be shuffled"""
+    displayname = "Entrance Shuffle"
+
+    option_none = 0
+    option_dungeons_simple = 1
+    option_dungeons_full = 2
+    option_dungeons_crossed = 3
+    option_simple = 4
+    option_restricted = 5
+    option_full = 6
+    option_crossed = 7
+    option_insanity = 8
+
+
+class ShopHeartCurrency(Toggle):
+    """Allow hearts to be used as payment in shops"""
+    displayname = "Shop Heart Payment"
+
+
+class ShopArrowCurrency(Toggle):
+    """Allow arrows to be used as payment in shops"""
+    displayname = "Shop Arrow Payment"
+
+
+class ShopBombCurrency(Toggle):
+    """Allow bombs to be used as payment in shops"""
+    displayname = "Shop Bomb Payment"
+
+
+class ShopUniversalKeyCurrency(Toggle):
+    """Allow universal keys to be used as payment in shops"""
+    displayname = "Shop Universal Key Payment"
+
+
+class ShopTriforcePieceCurrency(Toggle):
+    """Allow triforce pieces to be used as payment in shops"""
+    displayname = "Shop Triforce Piece Payment"
+
+
+class MirrorDirection(Choice):
+    """Choose which direction the Magic Mirror will transport you"""
+    displayname = "Mirror Direction"
+    default = 1
+
+    option_to_dark_world = 0
+    option_to_light_world = 1
+    option_bidirectional = 2
+
+    alias_standard = 1
+    alias_vanilla = 1
+    alias_inverted = 0
+
+
+class DoorShuffle(Choice):
+    """Shuffles the interior layout of dungeons"""
+    displayname = "Door Shuffle"
+    default = 0
+
+    option_disabled = 0
+    option_basic = 1
+    option_crossed = 2
+
+    alias_none = 0
+
+
+class DoorShuffleIntensity(Choice):
+    """Specifies which door types will be shuffled"""
+    displayname = "Door Shuffle Intensity"
+    default = 0
+
+    option_doors_and_spiral_stairs = 0
+    option_doors_edges_and_stairs = 1
+    option_doors_edges_stairs_and_lobby = 2
+
+    alias_level_1 = 0
+    alias_level_2 = 1
+    alias_level_3 = 2
+
+
+class KeyDropShuffle(Toggle):
+    """Includes keys dropped from enemies and pots in the item pool"""
+    displayname = "Key Drop Shuffle"
+
 
 options: typing.Dict[str, type(Option)] = {
-    "crystals_needed_for_gt": CrystalsTower,
-    "crystals_needed_for_ganon": CrystalsGanon,
-    "bigkey_shuffle": bigkey_shuffle,
-    "smallkey_shuffle": smallkey_shuffle,
-    "compass_shuffle": compass_shuffle,
-    "map_shuffle": map_shuffle,
+    # Always relevant
+    "goal": Goal,
+    "logic": Logic,
+    "dark_room_logic": DarkRoomLogic,
     "progressive": Progressive,
     "swordless": Swordless,
     "retro": Retro,
     "hints": Hints,
     "restrict_dungeon_item_on_boss": RestrictBossItem,
-    "pot_shuffle": PotShuffle,
+    "pot_location_shuffle": PotLocationShuffle,
+    "key_drop_shuffle": KeyDropShuffle,
     "enemy_shuffle": EnemyShuffle_Old,
     "killable_thieves": KillableThieves,
     "bush_shuffle": BushShuffle,
-    "shop_item_slots": ShopItemSlots,
     "tile_shuffle": TileShuffle,
+    "world_state": WorldState,
+
+    # Dungeon settings
+    "misery_mire_medallion": MiseryMireMedallion,
+    "turtle_rock_medallion": TurtleRockMedallion,
+    "crystals_needed_for_gt": CrystalsTower,
+
+    "bigkey_shuffle": BigkeyShuffle,
+    "smallkey_shuffle": SmallkeyShuffle,
+    "compass_shuffle": CompassShuffle,
+    "map_shuffle": MapShuffle,
+    "dungeon_counters": DungeonCounters,
+
+    # Ganon Goal
+    "crystals_needed_for_ganon": CrystalsGanon,
+    "open_pyramid": OpenPyramid,
+
+    # Triforce Hunt Goal
+    "triforcehud": TriforceHud,
+    "triforce_pieces_available": TriforcePiecesAvailable,
+
+    # Palettes
     "ow_palettes": OWPalette,
     "uw_palettes": UWPalette,
     "hud_palettes": HUDPalette,
     "sword_palettes": SwordPalette,
     "shield_palettes": ShieldPalette,
     "link_palettes": LinkPalette,
+
+    # Misc. Rom Settings
     "heartbeep": HeartBeep,
     "heartcolor": HeartColor,
     "quickswap": QuickSwap,
     "menuspeed": MenuSpeed,
     "music": Music,
     "reduceflashing": ReduceFlashing,
-    "triforcehud": TriforceHud,
-    "glitch_boots": DefaultOnToggle,
-    # new
-    "timer": Timer,
-    "dungeon_counters": DungeonCounters,
-    "logic": Logic,
-    "goal": Goal,
-    "world_state": WorldState,
-    "open_pyramid": OpenPyramid,
-    "countdown_start_time": CountdownStartingTime,
-    "red_clock_time": CountdownRedClockTime,
-    "blue_clock_time": CountdownBlueClockTime,
-    "green_clock_time": CountdownGreenClockTime,
-    "beemizer": Beemizer,
-    "boss_shuffle": BossShuffle,
-    "triforce_pieces_available": TriforcePiecesAvailable,
-    "shuffle_shop_price": ShopShufflePrice,
+    "sprite": Sprite,
+
+    # Shops
+    "shop_item_slots": ShopItemSlots,
     "shuffle_shop_pools": ShopShufflePools,
     "shuffle_potion_shop": ShopShuffleIncludePotionShop,
     "shuffle_lake_fairy": ShopShuffleIncludeLakeFairy,
     "shuffle_capacity_upgrades": ShuffleCapacityUpgrades,
-    #"shop_shuffle": ShopShuffleLegacy,
-    "misery_mire_medallion": MiseryMireMedallion,
-    "turtle_rock_medallion": TurtleRockMedallion,
-    "item_pool": ItemPool,
-    "item_functionality": ItemFunctionality,
+    # "shop_shuffle": ShopShuffleLegacy,
+    "shuffle_shop_price": ShopShufflePrice,
+    "shop_heart_currency": ShopHeartCurrency,
+    "shop_bomb_currency": ShopBombCurrency,
+    "shop_arrow_currency": ShopArrowCurrency,
+    "shop_universal_key_currency": ShopUniversalKeyCurrency,
+    "shop_triforce_piece_currency": ShopTriforcePieceCurrency,
+
+    # Enemies
     "enemy_health": EnemyHealth,
     "enemy_damage": EnemyDamage,
-    "doors_dummy": DoorsDummy,
-    "er_dummy": ERDummy,
+    "boss_shuffle": BossShuffle,
+
+    # Timed Mode
+    "timer": Timer,
+    "countdown_start_time": CountdownStartingTime,
+    "red_clock_time": CountdownRedClockTime,
+    "blue_clock_time": CountdownBlueClockTime,
+    "green_clock_time": CountdownGreenClockTime,
+
+    # Topography
+    "entrance_shuffle": EntranceShuffle,
+    "door_shuffle": DoorShuffle,
+    "door_shuffle_intensity": DoorShuffleIntensity,
+
+    # Misc
+    "glitch_boots": GlitchBoots,
+    "beemizer": Beemizer,
+    "item_pool": ItemPool,
+    "item_functionality": ItemFunctionality,
     "random_starting_item_amount": RandomStartItemAmount,
-    "sprite": Sprite,
+    "mirror_direction": MirrorDirection
 
 }

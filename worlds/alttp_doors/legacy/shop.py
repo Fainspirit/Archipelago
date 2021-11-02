@@ -5,7 +5,7 @@ import logging
 
 from worlds.alttp_doors.legacy.item_data import item_name_groups, item_table, ItemFactory, trap_replaceable, GetBeemizerItem
 from worlds.alttp_doors.memory_data import door_data
-from worlds.alttp_doors.options.standard import smallkey_shuffle
+from worlds.alttp_doors.options.standard import SmallkeyShuffle
 from Utils import int16_as_bytes
 from worlds.alttp_doors.standard.sub_classes import ALttPDoorsLocation
 
@@ -300,7 +300,7 @@ def create_shops(world, player: int):
         player_shop_table["Dark Lake Hylia Shop"] = \
             player_shop_table["Dark Lake Hylia Shop"]._replace(items=_inverted_hylia_shop_defaults, locked=None)
     chance_100 = int(world.retro[player]) * 0.25 + int(
-        world.smallkey_shuffle[player] == smallkey_shuffle.option_universal) * 0.5
+        world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal) * 0.5
     for region_name, (room_id, type, shopkeeper, custom, locked, inventory, sram_offset) in player_shop_table.items():
         region = world.get_region(region_name, player)
         shop: Shop = shop_class_mapping[type](region, room_id, shopkeeper, custom, locked, sram_offset)
@@ -396,19 +396,19 @@ shop_generation_types = {
 
 def set_up_shops(world, player: int):
     # TODO: move hard+ mode changes for shields here, utilizing the new shops
-
+    return
     if world.retro[player]:
         rss = world.get_region('Red Shield Shop', player).shop
         replacement_items = [['Red Potion', 150], ['Green Potion', 75], ['Blue Potion', 200], ['Bombs (10)', 50],
                              ['Blue Shield', 50], ['Small Heart',
                                                    10]]  # Can't just replace the single arrow with 10 arrows as retro doesn't need them.
-        if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+        if world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal:
             replacement_items.append(['Small Key (Universal)', 100])
         replacement_item = world.random.choice(replacement_items)
         rss.add_inventory(2, 'Single Arrow', 80, 1, replacement_item[0], replacement_item[1])
         rss.locked = True
 
-    if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal or world.retro[player]:
+    if world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal or world.retro[player]:
         for shop in world.random.sample([s for s in world.shops if
                                          s.custom and not s.locked and s.type == ShopType.Shop and s.region.player == player],
                                         5):
@@ -416,7 +416,7 @@ def set_up_shops(world, player: int):
             slots = [0, 1, 2]
             world.random.shuffle(slots)
             slots = iter(slots)
-            if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+            if world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal:
                 shop.add_inventory(next(slots), 'Small Key (Universal)', 100)
             if world.retro[player]:
                 shop.push_inventory(next(slots), 'Single Arrow', 80)
@@ -574,7 +574,7 @@ def price_to_funny_price(item: dict, world, player: int):
             # Check if we're in universal, check if our replacement isn't a Small Key
             # Check if price isn't super small... (this will ideally be handled in a future table)
             if p_type in [ShopPriceType.Keys]:
-                if world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
+                if world.SmallkeyShuffle[player] != SmallkeyShuffle.option_universal:
                     continue
                 elif item['replacement'] and 'Small Key' in item['replacement']:
                     continue

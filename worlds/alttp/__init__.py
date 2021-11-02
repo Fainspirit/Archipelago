@@ -335,8 +335,8 @@ class ALTTPWorld(World):
         trash_counts = {}
         standard_keyshuffle_players = set()
         for player in world.get_game_players("A Link to the Past"):
-            if world.mode[player] == 'standard' and world.smallkey_shuffle[player] \
-                    and world.smallkey_shuffle[player] != smallkey_shuffle.option_universal:
+            if world.mode[player] == 'standard' and world.SmallkeyShuffle[player] \
+                    and world.SmallkeyShuffle[player] != smallkey_shuffle.option_universal:
                 standard_keyshuffle_players.add(player)
             if not world.ganonstower_vanilla[player] or \
                     world.logic[player] in {'owglitches', 'hybridglitches', "nologic"}:
@@ -409,6 +409,6 @@ class ALttPLogic(LogicMixin):
     def _lttp_has_key(self, item, player, count: int = 1):
         if self.world.logic[player] == 'nologic':
             return True
-        if self.world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+        if self.world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal:
             return self.can_buy_unlimited('Small Key (Universal)', player)
         return self.prog_items[item, player] >= count
