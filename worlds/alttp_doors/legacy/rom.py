@@ -213,7 +213,7 @@ def check_enemizer(enemizercli):
 def apply_random_sprite_on_event(rom: LocalRom, sprite, local_random, allow_random_on_event, sprite_pool):
     userandomsprites = False
     if sprite and not isinstance(sprite, Sprite):
-        sprite = sprite.lower()
+        sprite = sprite.value.lower()
         userandomsprites = sprite.startswith('randomon')
 
         racerom = rom.read_byte(0x180213)
