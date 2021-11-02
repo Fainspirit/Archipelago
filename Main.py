@@ -113,8 +113,8 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
             for _ in range(count):
                 world.push_precollected(world.create_item(item_name, player))
 
-    for player in world.player_ids:# TODO REMOVE Doors
-        if player in world.get_game_players("A Link to the Past") or player in world.get_game_players("A Link to the Past + Doors"):
+    for player in world.player_ids:
+        if player in world.get_game_players("A Link to the Past"):
             # enforce pre-defined local items.
             if world.worlds[player].uses_local_game_settings:
                 local = world.worlds[player].game_settings["local_items"]
