@@ -800,14 +800,14 @@ def patch_rom(world, rom, player, enemized):
 
             # patch music
             music_addresses = dungeon_music_addresses[location.name]
-            if world.map_shuffle[player]:
+            if world.MapShuffle[player]:
                 music = local_random.choice([0x11, 0x16])
             else:
                 music = 0x11 if 'Pendant' in location.item.name else 0x16
             for music_address in music_addresses:
                 rom.write_byte(music_address, music)
 
-    if world.map_shuffle[player]:
+    if world.MapShuffle[player]:
         rom.write_byte(0x155C9, local_random.choice([0x11, 0x16]))  # Randomize GT music too with map shuffle
 
     # patch entrance/exits/holes
@@ -1489,19 +1489,19 @@ def patch_rom(world, rom, player, enemized):
     # block HC upstairs doors in rain state in standard mode
     rom.write_byte(0x18008A, 0x01 if world.mode[player] == "standard" and world.shuffle[player] != 'vanilla' else 0x00)
 
-    rom.write_byte(0x18016A, 0x10 | ((0x01 if world.smallkey_shuffle[player] else 0x00)
-                                     | (0x02 if world.compass_shuffle[player] else 0x00)
-                                     | (0x04 if world.map_shuffle[player] else 0x00)
-                                     | (0x08 if world.bigkey_shuffle[
+    rom.write_byte(0x18016A, 0x10 | ((0x01 if world.SmallkeyShuffle[player] else 0x00)
+                                     | (0x02 if world.CompassShuffle[player] else 0x00)
+                                     | (0x04 if world.MapShuffle[player] else 0x00)
+                                     | (0x08 if world.BigkeyShuffle[
                 player] else 0x00)))  # free roaming item text boxes
-    rom.write_byte(0x18003B, 0x01 if world.map_shuffle[player] else 0x00)  # maps showing crystals on overworld
+    rom.write_byte(0x18003B, 0x01 if world.MapShuffle[player] else 0x00)  # maps showing crystals on overworld
 
     # compasses showing dungeon count
     if world.clock_mode[player] or not world.dungeon_counters[player]:
         rom.write_byte(0x18003C, 0x00)  # Currently must be off if timer is on, because they use same HUD location
     elif world.dungeon_counters[player] is True:
         rom.write_byte(0x18003C, 0x02)  # always on
-    elif world.compass_shuffle[player] or world.dungeon_counters[player] == 'pickup':
+    elif world.CompassShuffle[player] or world.dungeon_counters[player] == 'pickup':
         rom.write_byte(0x18003C, 0x01)  # show on pickup
     else:
         rom.write_byte(0x18003C, 0x00)
@@ -1514,11 +1514,11 @@ def patch_rom(world, rom, player, enemized):
     # b - Big Key
     # a - Small Key
     #
-    rom.write_byte(0x180045, ((0x00 if (world.smallkey_shuffle[player] == smallkey_shuffle.option_original_dungeon or
-                                        world.smallkey_shuffle[player] == smallkey_shuffle.option_universal) else 0x01)
-                              | (0x02 if world.bigkey_shuffle[player] else 0x00)
-                              | (0x04 if world.map_shuffle[player] else 0x00)
-                              | (0x08 if world.compass_shuffle[player] else 0x00)))  # free roaming items in menu
+    rom.write_byte(0x180045, ((0x00 if (world.SmallkeyShuffle[player] == smallkey_shuffle.option_original_dungeon or
+                                        world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal) else 0x01)
+                              | (0x02 if world.BigkeyShuffle[player] else 0x00)
+                              | (0x04 if world.MapShuffle[player] else 0x00)
+                              | (0x08 if world.CompassShuffle[player] else 0x00)))  # free roaming items in menu
 
     # Map reveals
     reveal_bytes = {
@@ -1544,11 +1544,11 @@ def patch_rom(world, rom, player, enemized):
         return 0x0000
 
     rom.write_int16(0x18017A,
-                    get_reveal_bytes('Green Pendant') if world.map_shuffle[player] else 0x0000)  # Sahasrahla reveal
-    rom.write_int16(0x18017C, get_reveal_bytes('Crystal 5') | get_reveal_bytes('Crystal 6') if world.map_shuffle[
+                    get_reveal_bytes('Green Pendant') if world.MapShuffle[player] else 0x0000)  # Sahasrahla reveal
+    rom.write_int16(0x18017C, get_reveal_bytes('Crystal 5') | get_reveal_bytes('Crystal 6') if world.MapShuffle[
         player] else 0x0000)  # Bomb Shop Reveal
 
-    rom.write_byte(0x180172, 0x01 if world.smallkey_shuffle[
+    rom.write_byte(0x180172, 0x01 if world.SmallkeyShuffle[
                                          player] == smallkey_shuffle.option_universal else 0x00)  # universal keys
     rom.write_byte(0x18637E, 0x01 if world.retro[player] else 0x00)  # Skip quiver in item shops once bought
     rom.write_byte(0x180175, 0x01 if world.retro[player] else 0x00)  # rupee bow
@@ -2268,9 +2268,9 @@ def write_strings(rom, world, player):
 
         # Lastly we write hints to show where certain interesting items are. It is done the way it is to re-use the silver code and also to give one hint per each type of item regardless of how many exist. This supports many settings well.
         items_to_hint = RelevantItems.copy()
-        if world.smallkey_shuffle[player]:
+        if world.SmallkeyShuffle[player]:
             items_to_hint.extend(SmallKeys)
-        if world.bigkey_shuffle[player]:
+        if world.BigkeyShuffle[player]:
             items_to_hint.extend(BigKeys)
         local_random.shuffle(items_to_hint)
         hint_count = 5 if world.shuffle[player] not in ['vanilla', 'dungeonssimple', 'dungeonsfull',

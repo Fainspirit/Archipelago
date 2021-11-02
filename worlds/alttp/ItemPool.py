@@ -275,7 +275,7 @@ def generate_itempool(world):
         itempool.extend(['Rupees (300)'] * 34)
         itempool.extend(['Bombs (10)'] * 5)
         itempool.extend(['Arrows (10)'] * 7)
-        if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+        if world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal:
             itempool.extend(itemdiff.universal_keys)
             itempool.append('Small Key (Universal)')
 
@@ -641,7 +641,7 @@ def get_pool_core(world, player: int):
     if retro:
         replace = {'Single Arrow', 'Arrows (10)', 'Arrow Upgrade (+5)', 'Arrow Upgrade (+10)'}
         pool = ['Rupees (5)' if item in replace else item for item in pool]
-    if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+    if world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal:
         pool.extend(diff.universal_keys)
         item_to_place = 'Small Key (Universal)' if goal != 'icerodhunt' else 'Nothing'
         if mode == 'standard':
@@ -778,7 +778,7 @@ def make_custom_item_pool(world, player):
         itemtotal = itemtotal + 1
 
     if mode == 'standard':
-        if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+        if world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal:
             key_location = world.random.choice(
                 ['Secret Passage', 'Hyrule Castle - Boomerang Chest', 'Hyrule Castle - Map Chest',
                  'Hyrule Castle - Zelda\'s Chest', 'Sewers - Dark Cross'])
@@ -801,7 +801,7 @@ def make_custom_item_pool(world, player):
         pool.extend(['Magic Mirror'] * customitemarray[22])
         pool.extend(['Moon Pearl'] * customitemarray[28])
 
-    if world.smallkey_shuffle[player] == smallkey_shuffle.option_universal:
+    if world.SmallkeyShuffle[player] == smallkey_shuffle.option_universal:
         itemtotal = itemtotal - 28  # Corrects for small keys not being in item pool in Retro Mode
     if itemtotal < total_items_to_place:
         pool.extend(['Nothing'] * (total_items_to_place - itemtotal))

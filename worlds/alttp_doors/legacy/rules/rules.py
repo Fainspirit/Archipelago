@@ -7,7 +7,7 @@ from worlds.alttp_doors.legacy.rules.overworld_glitch_rules import no_logic_rule
 from worlds.alttp_doors.legacy.rules.underworld_glitch_rules import underworld_glitches_rules
 from worlds.generic.Rules import set_rule, add_rule, forbid_item, add_item_rule, item_in_locations, \
     item_name
-from worlds.alttp_doors.options.standard import smallkey_shuffle
+from worlds.alttp_doors.options.standard import SmallkeyShuffle
 
 
 def set_rules(world):
@@ -214,7 +214,7 @@ def global_rules(world, player):
 
     set_rule(world.get_entrance('Sewers Door', player),
              lambda state: state._lttp_has_key('Small Key (Hyrule Castle)', player) or (
-                         world.smallkey_shuffle[player] == smallkey_shuffle.option_universal and world.mode[
+                     world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal and world.mode[
                      player] == 'standard'))  # standard universal small keys cannot access the shop
     set_rule(world.get_entrance('Sewers Back Door', player),
              lambda state: state._lttp_has_key('Small Key (Hyrule Castle)', player))
@@ -920,14 +920,14 @@ def set_trock_key_rules(world, player):
             return 4
 
         # If TR is only accessible from the middle, the big key must be further restricted to prevent softlock potential
-        if not can_reach_front and not world.smallkey_shuffle[player]:
+        if not can_reach_front and not world.SmallkeyShuffle[player]:
             # Must not go in the Big Key Chest - only 1 other chest available and 2+ keys required for all other chests
             forbid_item(world.get_location('Turtle Rock - Big Key Chest', player), 'Big Key (Turtle Rock)', player)
             if not can_reach_big_chest:
                 # Must not go in the Chain Chomps chest - only 2 other chests available and 3+ keys required for all other chests
                 forbid_item(world.get_location('Turtle Rock - Chain Chomps', player), 'Big Key (Turtle Rock)', player)
             if world.accessibility[player] == 'locations' and world.goal[player] != 'icerodhunt':
-                if world.bigkey_shuffle[player] and can_reach_big_chest:
+                if world.BigkeyShuffle[player] and can_reach_big_chest:
                     # Must not go in the dungeon - all 3 available chests (Chomps, Big Chest, Crystaroller) must be keys to access laser bridge, and the big key is required first
                     for location in ['Turtle Rock - Chain Chomps', 'Turtle Rock - Compass Chest',
                                      'Turtle Rock - Roller Room - Left', 'Turtle Rock - Roller Room - Right']:
