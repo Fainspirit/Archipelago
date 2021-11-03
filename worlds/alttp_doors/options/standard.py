@@ -324,7 +324,10 @@ class Logic(Choice):
 
     alias_ng = 0
     alias_owg = 2
+    alias_owglitches = 2
     alias_hmg = 3
+    alias_hybridglitches = 3
+    alias_nologic = 4
 
 
 class Goal(Choice):
@@ -342,8 +345,9 @@ class Goal(Choice):
     option_ganon_triforce_hunt = 7
     option_ganon_local_triforce_hunt = 8
     option_ice_rod_hunt = 9
+    option_bosses = 10
+    option_crystals = 11
 
-    # compat
     alias_ganon = 0
     alias_local_ganon_triforce_hunt = 8
 
@@ -583,7 +587,7 @@ class EnemyDamage(Choice):
     option_random_damage = 2
 
     alias_default = 0
-
+    alias_chaos = 2
 
 # TODO: Numbers for the options
 class EnemyHealth(Choice):
@@ -600,6 +604,10 @@ class EnemyHealth(Choice):
     option_armor_plated = 3
 
     alias_default = 0
+    alias_easy = 1
+    alias_normal = 0
+    alias_hard = 2
+    alias_expert = 3
 # 22 Oct 21
 
 
@@ -656,6 +664,9 @@ class EntranceShuffle(Choice):
     option_full = 6
     option_crossed = 7
     option_insanity = 8
+    option_madness = 9 # Have not heard of this but the rom patcher knows of it
+
+    alias_vanilla = 0
 
 
 class ShopHeartCurrency(Toggle):

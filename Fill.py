@@ -82,14 +82,22 @@ def distribute_items_restrictive(world: MultiWorld, fill_locations=None):
     nonlocalrestitempool = []
     restitempool = []
 
+
     for item in world.itempool:
+        if world.worlds[item.player].uses_local_game_settings:
+            local = world.worlds[item.player].game_settings["local_items"]
+            non_local = world.worlds[item.player].game_settings["non_local_items"]
+        else:
+            local = world.local_items[item.player]
+            non_local = world.non_local_items[item.player]
+
         if item.advancement:
             progitempool.append(item)
         elif item.never_exclude:  # this only gets nonprogression items which should not appear in excluded locations
             nonexcludeditempool.append(item)
-        elif item.name in world.local_items[item.player].value:
+        elif item.name in local.value:
             localrestitempool[item.player].append(item)
-        elif item.name in world.non_local_items[item.player].value:
+        elif item.name in non_local.value:
             nonlocalrestitempool.append(item)
         else:
             restitempool.append(item)

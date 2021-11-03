@@ -327,10 +327,18 @@ def main(args, seed=None, baked_server_options: Optional[Dict[str, object]] = No
                         locations_data[location.player][location.address] = location.item.code, location.item.player
                         if location.player in sending_visible_players:
                             precollect_hint(location)
-                        elif location.name in world.start_location_hints[location.player]:
-                            precollect_hint(location)
-                        elif location.item.name in world.start_hints[location.item.player]:
-                            precollect_hint(location)
+                        else:
+                            # Split for local game settings
+                            if world.worlds[location.player].uses_local_game_settings:
+                                if location.name in world.worlds[location.player].game_settings["start_location_hints"]:
+                                    precollect_hint(location)
+                                elif location.item.name in world.worlds[location.player].game_settings["start_hints"]:
+                                    precollect_hint(location)
+                            else:
+                                if location.name in world.start_location_hints[location.player]:
+                                    precollect_hint(location)
+                                elif location.item.name in world.start_hints[location.item.player]:
+                                    precollect_hint(location)
 
                 multidata = {
                     "slot_data": slot_data,
