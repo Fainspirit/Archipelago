@@ -10,7 +10,8 @@ def handle_base_regions(autoworld):
         handle_inverted_regions(autoworld)
 
 def handle_open_regions(autoworld):
-    pass
+    from ..memory_data.region_data import create_regions
+    create_regions(autoworld.world, autoworld.player)
 
 def handle_standard_regions(autoworld):
     pass

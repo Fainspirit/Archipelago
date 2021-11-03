@@ -12,3 +12,4 @@ from .shops import handle_shops
 from .swords import handle_swords
 from .timed_clocks import handle_timed_clocks
 from .triforce_hunt import handle_triforce_hunt
+from .vanilla import create_vanilla_pool
