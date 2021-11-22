@@ -22,7 +22,12 @@ import Patch
 from .legacy.inverted_regions import create_inverted_regions, mark_dark_world_regions
 from .legacy.entrance_randomizer_shuffle import link_entrances, link_inverted_entrances, plando_connect
 
+import worlds.alttp_doors.alttp_generate_early
+import worlds.alttp_doors.alttp_create_regions
+import worlds.alttp_doors.alttp_create_items
+
 lttp_logger = logging.getLogger("A Link to the Past + Doors")
+
 
 
 class ALTTPDoorsWorld(World):
@@ -62,7 +67,6 @@ class ALTTPDoorsWorld(World):
         player = self.player
         world = self.world
 
-        import worlds.alttp_doors.alttp_generate_early
         alttp_generate_early.handle_assured_sword(self)
         alttp_generate_early.handle_vanilla_sword_placement(self)
         alttp_generate_early.handle_glitch_boots(self)
@@ -101,7 +105,6 @@ class ALTTPDoorsWorld(World):
         player = self.player
         world = self.world
 
-        import worlds.alttp_doors.alttp_create_regions
         #alttp_create_regions.handle_base_regions(self)
         alttp_create_regions.handle_pyramid_open(self)
         alttp_create_regions.handle_pot_shuffle(self)
@@ -153,7 +156,6 @@ class ALTTPDoorsWorld(World):
         #generate_itempool(self)
         self.item_pool = []
 
-        import worlds.alttp_doors.alttp_create_items
         alttp_create_items.create_vanilla_pool(self)
         alttp_create_items.handle_progressive(self)
         alttp_create_items.handle_difficulty(self)

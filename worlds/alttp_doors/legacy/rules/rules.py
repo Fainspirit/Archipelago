@@ -1488,13 +1488,13 @@ def set_bunny_rules(world: MultiWorld, player: int, inverted: bool):
         if entrance.player == player and is_bunny(entrance.connected_region):
             if world.logic[player] in ['minorglitches', 'owglitches', 'hybridglitches', 'nologic'] :
                 if entrance.connected_region.type == RegionType.Dungeon:
-                    if entrance.parent_region.type != RegionType.Dungeon and entrance.connected_region.name in OverworldGlitchRules.get_invalid_bunny_revival_dungeons():
+                    if entrance.parent_region.type != RegionType.Dungeon and entrance.connected_region.name in overworld_glitches_rules().get_invalid_bunny_revival_dungeons():
                         add_rule(entrance, get_rule_to_add(entrance.connected_region, None, entrance))
                     continue
                 if entrance.connected_region.name == 'Turtle Rock (Entrance)':
                     add_rule(world.get_entrance('Turtle Rock Entrance Gap', player), get_rule_to_add(entrance.connected_region, None, entrance))
             for location in entrance.connected_region.locations:
-                if world.logic[player] in ['minorglitches', 'owglitches', 'hybridglitches', 'nologic'] and entrance.name in OverworldGlitchRules.get_invalid_mirror_bunny_entrances():
+                if world.logic[player] in ['minorglitches', 'owglitches', 'hybridglitches', 'nologic'] and entrance.name in overworld_glitches_rules.get_invalid_mirror_bunny_entrances():
                     continue
                 if location.name in bunny_accessible_locations:
                     continue
