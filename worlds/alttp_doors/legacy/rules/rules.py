@@ -14,7 +14,7 @@ def set_rules(world):
     player = world.player
     world = world.world
     # TODO fix rules
-    return
+
     if world.logic[player] == 'nologic':
         logging.info(
             'WARNING! Seeds generated under this logic often require major glitches and may be impossible!')
@@ -49,25 +49,25 @@ def set_rules(world):
         inverted_rules(world, player)
     else:
         raise NotImplementedError(f'World state {world.mode[player]} is not implemented yet')
-
-    if world.logic[player] == 'noglitches':
+    # TODO - fix this check by new rule adding system
+    if True or world.worlds[player].game_settings["logic"] == 'noglitches':
         no_glitches_rules(world, player)
-    elif world.logic[player] == 'owglitches':
+    elif world.worlds[player].game_settings["logic"] == 'owglitches':
         # Initially setting no_glitches_rules to set the baseline rules for some
         # entrances. The overworld_glitches_rules set is primarily additive.
         no_glitches_rules(world, player)
         fake_flipper_rules(world, player)
         overworld_glitches_rules(world, player)
-    elif world.logic[player] in ['hybridglitches', 'nologic']:
+    elif world.worlds[player].game_settings["logic"] in ['hybridglitches', 'nologic']:
         no_glitches_rules(world, player)
         fake_flipper_rules(world, player)
         overworld_glitches_rules(world, player)
         underworld_glitches_rules(world, player)
-    elif world.logic[player] == 'minorglitches':
+    elif world.worlds[player].game_settings["logic"] == 'minorglitches':
         no_glitches_rules(world, player)
         fake_flipper_rules(world, player)
     else:
-        raise NotImplementedError(f'Not implemented yet: Logic - {world.logic[player]}')
+        raise NotImplementedError(f'Not implemented yet: Logic - {world.worlds[player].game_settings["logic"]}')
 
     if world.goal[player] == 'bosses':
         # require all bosses to beat ganon
@@ -78,7 +78,9 @@ def set_rules(world):
 
     if world.mode[player] != 'inverted':
         set_big_bomb_rules(world, player)
-        if world.logic[player] in {'owglitches', 'hybridglitches', 'nologic'} and world.shuffle[player] not in {'insanity', 'insanity_legacy', 'madness'}:
+        # TODO - fix -Fain
+
+        if False and world.worlds[player].game_settings["logic"] in {'owglitches', 'hybridglitches', 'nologic'} and world.worlds[player].game_settings["shuffle"] not in {'insanity', 'insanity_legacy', 'madness'}:
             path_to_courtyard = mirrorless_path_to_castle_courtyard(world, player)
             add_rule(world.get_entrance('Pyramid Fairy', player), lambda state: state.world.get_entrance('Dark Death Mountain Offset Mirror', player).can_reach(state) and all(rule(state) for rule in path_to_courtyard), 'or')
     else:
@@ -91,7 +93,7 @@ def set_rules(world):
 
     # GT Entrance may be required for Turtle Rock for OWG and < 7 required
     ganons_tower = world.get_entrance('Inverted Ganons Tower' if world.mode[player] == 'inverted' else 'Ganons Tower', player)
-    if world.crystals_needed_for_gt[player] == 7 and not (world.logic[player] in ['owglitches', 'hybridglitches', 'nologic'] and world.mode[player] != 'inverted'):
+    if world.worlds[player].game_settings["crystals_needed_for_gt"] == 7 and not (world.worlds[player].game_settings["logic"] in ['owglitches', 'hybridglitches', 'nologic'] and world.mode[player] != 'inverted'):
         set_rule(ganons_tower, lambda state: False)
 
     set_trock_key_rules(world, player)
@@ -321,7 +323,7 @@ def global_rules(world, player):
     set_rule(world.get_location('Turtle Rock - Eye Bridge - Top Right', player), lambda state: state.has('Cane of Byrna', player) or state.has('Cape', player) or state.has('Mirror Shield', player))
     set_rule(world.get_entrance('Turtle Rock (Trinexx)', player), lambda state: state._lttp_has_key('Small Key (Turtle Rock)', player, 4) and state.has('Big Key (Turtle Rock)', player) and state.has('Cane of Somaria', player))
 
-    if not world.enemy_shuffle[player]:
+    if not world.worlds[player].game_settings["enemy_shuffle"]:
         set_rule(world.get_entrance('Palace of Darkness Bonk Wall', player), lambda state: state.can_shoot_arrows(player))
     set_rule(world.get_entrance('Palace of Darkness Hammer Peg Drop', player), lambda state: state.has('Hammer', player))
     set_rule(world.get_entrance('Palace of Darkness Bridge Room', player), lambda state: state._lttp_has_key('Small Key (Palace of Darkness)', player, 1))  # If we can reach any other small key door, we already have back door access to this area
@@ -381,7 +383,7 @@ def global_rules(world, player):
              lambda state: state.world.get_location('Ganons Tower - Big Key Chest', player).parent_region.dungeon.bosses['bottom'].can_defeat(state))
     set_rule(world.get_location('Ganons Tower - Big Key Room - Right', player),
              lambda state: state.world.get_location('Ganons Tower - Big Key Room - Right', player).parent_region.dungeon.bosses['bottom'].can_defeat(state))
-    if world.enemy_shuffle[player]:
+    if world.worlds[player].game_settings["enemy_shuffle"]:
         set_rule(world.get_entrance('Ganons Tower Big Key Door', player),
                  lambda state: state.has('Big Key (Ganons Tower)', player))
     else:
@@ -517,7 +519,7 @@ def default_rules(world, player):
 
     set_rule(world.get_entrance('Pyramid Hole', player), lambda state: state.has('Beat Agahnim 2', player) or world.open_pyramid[player])
 
-    if world.swordless[player]:
+    if world.worlds[player].game_settings["swordless"]:
         swordless_rules(world, player)
 
 
@@ -920,14 +922,14 @@ def set_trock_key_rules(world, player):
             return 4
 
         # If TR is only accessible from the middle, the big key must be further restricted to prevent softlock potential
-        if not can_reach_front and not world.SmallkeyShuffle[player]:
+        if not can_reach_front and not world.worlds[player].game_settings["smallkey_shuffle"]:
             # Must not go in the Big Key Chest - only 1 other chest available and 2+ keys required for all other chests
             forbid_item(world.get_location('Turtle Rock - Big Key Chest', player), 'Big Key (Turtle Rock)', player)
             if not can_reach_big_chest:
                 # Must not go in the Chain Chomps chest - only 2 other chests available and 3+ keys required for all other chests
                 forbid_item(world.get_location('Turtle Rock - Chain Chomps', player), 'Big Key (Turtle Rock)', player)
-            if world.accessibility[player] == 'locations' and world.goal[player] != 'icerodhunt':
-                if world.BigkeyShuffle[player] and can_reach_big_chest:
+            if world.accessibility[player] == 'locations' and world.worlds[player].game_settings["goal"] != 'icerodhunt':
+                if world.worlds[player].game_settings["bigkey_shuffle"] and can_reach_big_chest:
                     # Must not go in the dungeon - all 3 available chests (Chomps, Big Chest, Crystaroller) must be keys to access laser bridge, and the big key is required first
                     for location in ['Turtle Rock - Chain Chomps', 'Turtle Rock - Compass Chest',
                                      'Turtle Rock - Roller Room - Left', 'Turtle Rock - Roller Room - Right']:
@@ -1413,12 +1415,12 @@ def set_bunny_rules(world: MultiWorld, player: int, inverted: bool):
                 return lambda state: state.has('Moon Pearl', player)
             if region.name == 'Tower of Hera (Bottom)':  # Need to hit the crystal switch
                 return lambda state: state.has('Magic Mirror', player) and state.has_sword(player) or state.has('Moon Pearl', player)
-            if region.name in OverworldGlitchRules.get_invalid_bunny_revival_dungeons():
+            if region.name in overworld_glitches_rules.get_invalid_bunny_revival_dungeons():
                 return lambda state: state.has('Magic Mirror', player) or state.has('Moon Pearl', player)
             if region.type == RegionType.Dungeon:
                 return lambda state: True
-            if (((location is None or location.name not in OverworldGlitchRules.get_superbunny_accessible_locations())
-                    or (connecting_entrance is not None and connecting_entrance.name in OverworldGlitchRules.get_invalid_bunny_revival_dungeons()))
+            if (((location is None or location.name not in overworld_glitches_rules.get_superbunny_accessible_locations())
+                    or (connecting_entrance is not None and connecting_entrance.name in overworld_glitches_rules.get_invalid_bunny_revival_dungeons()))
                     and not is_link(region)):
                 return lambda state: state.has('Moon Pearl', player)
         else:
