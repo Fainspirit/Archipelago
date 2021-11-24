@@ -479,9 +479,6 @@ class MultiWorld():
 
             for location in sphere:
                 locations.remove(location)
-                print(location.item)
-                if location.item is None:
-                    print("Hoi")
                 state.collect(location.item, True, location)
 
             if self.has_beaten_game(state):
