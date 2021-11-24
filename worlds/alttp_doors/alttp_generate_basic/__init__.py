@@ -1,0 +1,1 @@
+from .region_entrance_randomize import randomize_region_entrances
