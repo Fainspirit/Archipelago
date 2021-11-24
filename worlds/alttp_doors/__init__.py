@@ -52,9 +52,6 @@ class ALTTPDoorsWorld(World):
     remote_items: bool = False
     remote_start_inventory: bool = False
 
-    set_rules = set_rules
-
-    #create_items = generate_itempool
 
     def __init__(self, *args, **kwargs):
         self.dungeon_local_item_names = set()
@@ -66,6 +63,9 @@ class ALTTPDoorsWorld(World):
     def generate_early(self):
         player = self.player
         world = self.world
+
+        # Used for the setup methods to store stuff
+        self.metadata = {}
 
         alttp_generate_early.handle_assured_sword(self)
         alttp_generate_early.handle_vanilla_sword_placement(self)
@@ -99,7 +99,7 @@ class ALTTPDoorsWorld(World):
         #             self.dungeon_specific_item_names |= self.item_name_groups[option.item_name_group]
         #
         # #world.difficulty_requirements[player] = difficulties[world.difficulty[player]]
-        # self.game_settings["difficulty_requirements"] = difficulties[world.difficulty[player]]
+        self.game_settings["difficulty_requirements"] = difficulties[world.difficulty[player]]
 
     def create_regions(self):
         player = self.player
@@ -152,11 +152,21 @@ class ALTTPDoorsWorld(World):
         world.random = old_random
         plando_connect(world, player)
 
+    def set_rules(self):
+        #set_rules(self)
+        pass
+
     def create_items(self):
         #generate_itempool(self)
-        self.item_pool = []
+        # A dict of items that should be in the pool
+        self.item_pool = {}
 
+        # Add the vanilla items to the pool
         alttp_create_items.create_vanilla_pool(self)
+
+        # Agahnim, frog, etc.
+        alttp_create_items.handle_events(self)
+
         alttp_create_items.handle_progressive(self)
         alttp_create_items.handle_difficulty(self)
         alttp_create_items.handle_swords(self)
@@ -164,13 +174,22 @@ class ALTTPDoorsWorld(World):
         alttp_create_items.handle_capacity_upgrades(self)
         alttp_create_items.handle_shops(self)
         alttp_create_items.handle_retro_mode(self)
-        alttp_create_items.handle_junk(self)
-        alttp_create_items.handle_beemizer(self)
+
+
         alttp_create_items.handle_key_drop_shuffle(self)
         alttp_create_items.handle_triforce_hunt(self)
         alttp_create_items.handle_custom_pool(self)
         alttp_create_items.handle_item_groups(self)
+
+        # Place the Triforce where it belongs
+        alttp_create_items.handle_triforce_placement(self)
+
+        # When to do junk and bees?
+        alttp_create_items.handle_junk(self)
+        alttp_create_items.handle_beemizer(self)
+
         # TODO: Ganon special bow? (alt)
+
 
         created_items = []
         for k in self.item_pool:
@@ -263,7 +282,8 @@ class ALTTPDoorsWorld(World):
             return item_name
 
     def pre_fill(self):
-
+        # TODO - fix this kek
+        return
         from Fill import fill_restrictive, FillError
         attempts = 5
         world = self.world
@@ -463,8 +483,8 @@ def get_same_seed(world, seed_def: tuple) -> str:
 
 class ALttPLogic(LogicMixin):
     def _lttp_doors_has_key(self, item, player, count: int = 1):
-        if self.world.logic[player] == 'nologic':
+        if self.world.worlds[player].game_settings["logic"] == 'nologic':
             return True
-        if self.world.SmallkeyShuffle[player] == SmallkeyShuffle.option_universal:
+        if self.world.worlds[player].game_settings["smallkey_shuffle"] == SmallkeyShuffle.option_universal:
             return self.can_buy_unlimited('Small Key (Universal)', player)
         return self.prog_items[item, player] >= count
