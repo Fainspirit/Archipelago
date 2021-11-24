@@ -323,6 +323,8 @@ class Logic(Choice):
     option_no_logic = 4
 
     alias_ng = 0
+    alias_noglitches = 0
+    alias_minorglitches = 1
     alias_owg = 2
     alias_owglitches = 2
     alias_hmg = 3
@@ -350,6 +352,7 @@ class Goal(Choice):
 
     alias_ganon = 0
     alias_local_ganon_triforce_hunt = 8
+    alias_icerodhunt = 9
 
     @property
     def requires_ganon(self):
