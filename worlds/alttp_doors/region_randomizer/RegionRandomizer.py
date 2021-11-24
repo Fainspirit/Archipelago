@@ -82,6 +82,7 @@ class EntranceContainer:
         # The current traversal state will be based on this
         self.entrance_region_type = entrance_region_type
 
+        # TODO - specify somewhere in the params what types of flags are interchangable
         # The IntFlags objects describing this entrance's flags
         self.entrance_flags = entrance_flags
 
@@ -89,7 +90,7 @@ class EntranceContainer:
         self.cost = cost
 
 
-# TODO - Need to pass a list of all that can be had in a state ("hookshot, small key, boomerang") for collection state
+# TODO - Need to pass a list of all that can be had in a state? ("hookshot, small key, boomerang") for collection state
 # TODO - Need to pass a list of checks and their type? (check type based on region type of the traversal)
 class RegionEntranceRandomizer:
     def __init__(self,

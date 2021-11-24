@@ -24,3 +24,14 @@ class EntranceType(IntFlag):
     bonk: 32768
 
     portal: 65536 # TODO: Maybe warp shuffle ???
+
+    low_layer: 131072
+    high_layer: 262144
+
+    straight_stairs: 524288
+    spiral_stairs: 1048576
+
+# TODO - specify somewhere mask types to know which edges can be swapped with which
+# Probably put this on a parameter for the rando so that different swap modes can access it
+
+# TODO - something for syncing two way entrance swap
