@@ -1,10 +1,12 @@
 def create_vanilla_pool(autoworld):
     """Get the basic vanilla pool of 216 items. This includes inventory, hearts, consumables, and dungeon items"""
-    vanilla_items = vanilla_inventory | vanilla_consumables | vanilla_dungeon_items | {'Nothing': 11} # Fix this - events and other things ?
+    vanilla_items = vanilla_inventory | vanilla_dungeon_items | {'Nothing': 0} # Fix this - events and other things ?
+    # Consumables are skipped as they can be added in junk stage
     c = 0
     for k in vanilla_items:
         c += vanilla_items[k]
     autoworld.item_pool = vanilla_items
+    autoworld.metadata["item_pool_size"] = c
 
 
 vanilla_inventory = {
@@ -66,13 +68,13 @@ vanilla_inventory = {
 """Base Inventory (76 count)"""
 
 vanilla_consumables = {
-    # Rupees (44 count)
+    # Rupees (46 count)
     'Rupee (1)': 1, # TODO: change to "Rupees (1)" for consistency
     'Rupees (5)': 4,
     'Rupees (20)': 28,
-    'Rupees (50)': 6,
+    'Rupees (50)': 7,
     'Rupees (100)': 1,
-    'Rupees (300)': 4,
+    'Rupees (300)': 5,
 
     # Arrows (13 count)
     'Single Arrow': 1,
@@ -82,7 +84,7 @@ vanilla_consumables = {
     'Bombs (3)': 16,
     'Bombs (10)': 1,
 }
-"""Consumables (74 count)"""
+"""Consumables (76 count)"""
 
 vanilla_dungeon_items = {
     # HC/ES
