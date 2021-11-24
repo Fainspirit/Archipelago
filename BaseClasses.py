@@ -479,6 +479,9 @@ class MultiWorld():
 
             for location in sphere:
                 locations.remove(location)
+                print(location.item)
+                if location.item is None:
+                    print("Hoi")
                 state.collect(location.item, True, location)
 
             if self.has_beaten_game(state):
@@ -672,7 +675,7 @@ class CollectionState(object):
                 or (self.has('Bombs (10)', player) and enemies < 6))
 
     def can_shoot_arrows(self, player: int) -> bool:
-        if self.world.retro[player]:
+        if self.world.worlds[player].game_settings["retro"]:
             return (self.has('Bow', player) or self.has('Silver Bow', player)) and self.can_buy('Single Arrow', player)
         return self.has('Bow', player) or self.has('Silver Bow', player)
 
@@ -688,7 +691,7 @@ class CollectionState(object):
 
     def can_retrieve_tablet(self, player: int) -> bool:
         return self.has('Book of Mudora', player) and (self.has_beam_sword(player) or
-                                                       (self.world.swordless[player] and
+                                                       (self.world.worlds[player].game_settings["swordless"] and
                                                         self.has("Hammer", player)))
 
     def has_sword(self, player: int) -> bool:
@@ -710,7 +713,7 @@ class CollectionState(object):
     def can_melt_things(self, player: int) -> bool:
         return self.has('Fire Rod', player) or \
                (self.has('Bombos', player) and
-                (self.world.swordless[player] or
+                (self.world.worlds[player].game_settings["swordless"] or
                  self.has_sword(player)))
 
     def can_avoid_lasers(self, player: int) -> bool:
