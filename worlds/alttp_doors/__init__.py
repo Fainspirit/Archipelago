@@ -5,6 +5,7 @@ import threading
 import typing
 
 from BaseClasses import Item, CollectionState
+from . import alttp_generate_basic
 from .standard.sub_classes import ALttPDoorsItem
 from .alttp_init.load_options import load_options
 from ..AutoWorld import World, LogicMixin
@@ -25,6 +26,7 @@ from .legacy.entrance_randomizer_shuffle import link_entrances, link_inverted_en
 import worlds.alttp_doors.alttp_generate_early
 import worlds.alttp_doors.alttp_create_regions
 import worlds.alttp_doors.alttp_create_items
+import worlds.alttp_doors.alttp_pre_fill
 
 lttp_logger = logging.getLogger("A Link to the Past + Doors")
 
@@ -134,6 +136,13 @@ class ALTTPDoorsWorld(World):
         create_shops(world, self, player)
         create_dungeons(world, self, player)
 
+        l = []
+        for r in world.regions:
+            if r.player == player:
+                l += r.locations
+
+        self.metadata["locations"] = l
+
         if self.game_settings["logic"] not in ["no_glitches", "minor_glitches"] and self.game_settings["shuffle"] in \
                 {"vanilla", "dungeons_simple", "dungeons_full", "simple", "restricted", "full"}:
             world.fix_fake_world[player] = False
@@ -153,8 +162,12 @@ class ALTTPDoorsWorld(World):
         plando_connect(world, player)
 
     def set_rules(self):
+        # TODO - add rules lel
         #set_rules(self)
         pass
+
+    def generate_basic(self):
+        alttp_generate_basic.randomize_region_entrances(self)
 
     def create_items(self):
         #generate_itempool(self)
@@ -164,8 +177,6 @@ class ALTTPDoorsWorld(World):
         # Add the vanilla items to the pool
         alttp_create_items.create_vanilla_pool(self)
 
-        # Agahnim, frog, etc.
-        alttp_create_items.handle_events(self)
 
         alttp_create_items.handle_progressive(self)
         alttp_create_items.handle_difficulty(self)
@@ -181,8 +192,6 @@ class ALTTPDoorsWorld(World):
         alttp_create_items.handle_custom_pool(self)
         alttp_create_items.handle_item_groups(self)
 
-        # Place the Triforce where it belongs
-        alttp_create_items.handle_triforce_placement(self)
 
         # When to do junk and bees?
         alttp_create_items.handle_junk(self)
@@ -197,6 +206,7 @@ class ALTTPDoorsWorld(World):
                 created_items.append(self.create_item(k))
 
         self.world.itempool += created_items
+
 
 
     def modify_multidata(self, multidata: dict):
@@ -282,42 +292,21 @@ class ALTTPDoorsWorld(World):
             return item_name
 
     def pre_fill(self):
-        # TODO - fix this kek
-        return
-        from Fill import fill_restrictive, FillError
-        attempts = 5
-        world = self.world
-        player = self.player
-        all_state = world.get_all_state(use_cache=True)
-        crystals = [self.create_item(name) for name in ['Red Pendant', 'Blue Pendant', 'Green Pendant', 'Crystal 1', 'Crystal 2', 'Crystal 3', 'Crystal 4', 'Crystal 7', 'Crystal 5', 'Crystal 6']]
-        crystal_locations = [world.get_location('Turtle Rock - Prize', player),
-                             world.get_location('Eastern Palace - Prize', player),
-                             world.get_location('Desert Palace - Prize', player),
-                             world.get_location('Tower of Hera - Prize', player),
-                             world.get_location('Palace of Darkness - Prize', player),
-                             world.get_location('Thieves\' Town - Prize', player),
-                             world.get_location('Skull Woods - Prize', player),
-                             world.get_location('Swamp Palace - Prize', player),
-                             world.get_location('Ice Palace - Prize', player),
-                             world.get_location('Misery Mire - Prize', player)]
-        placed_prizes = {loc.item.name for loc in crystal_locations if loc.item}
-        unplaced_prizes = [crystal for crystal in crystals if crystal.name not in placed_prizes]
-        empty_crystal_locations = [loc for loc in crystal_locations if not loc.item]
-        for attempt in range(attempts):
-            try:
-                prizepool = unplaced_prizes.copy()
-                prize_locs = empty_crystal_locations.copy()
-                world.random.shuffle(prize_locs)
-                fill_restrictive(world, all_state, prize_locs, prizepool, True, lock=True)
-            except FillError as e:
-                lttp_logger.exception("Failed to place dungeon prizes (%s). Will retry %s more times", e,
-                                                attempts - attempt)
-                for location in empty_crystal_locations:
-                    location.item = None
-                continue
-            break
-        else:
-            raise FillError('Unable to place dungeon prizes')
+
+        # Agahnim, frog, etc.
+        alttp_pre_fill.handle_events(self)
+        # Find some spots for crystals #TODO - allow the algorithm to generate these? THey were preplaced before tho so idk
+        alttp_pre_fill.handle_crystals(self)
+        # Place the Triforce where it belongs
+        alttp_pre_fill.handle_triforce_placement(self)
+
+        n = self.metadata['locations'].__len__()
+        for l in self.metadata['locations']:
+            if l.item is not None:
+                n -= 1
+                print(f"{l} has item {l.item} after item stage")
+        print(f"Player {self.player} has {n} open locations remaining after pre-fill")
+
 
     @classmethod
     def stage_pre_fill(cls, world):
