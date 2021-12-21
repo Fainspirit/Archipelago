@@ -125,11 +125,9 @@ class RegionEntranceRandomizer:
         # Used to maintain a possible completable game
         self.linear_region_container_path = []
 
-
     # TODO - Ensure that the game state holds for at least one traversal
     def sanity_check(self):
         return self.region_containers.__len__() >= 0
-
 
     def build_linear_region_container_path(self):
         # Start with the menu region
@@ -182,20 +180,17 @@ class RegionEntranceRandomizer:
             else: # Can't traverse now, put it at the end and we try later once we have lots more space
                 self.entrance_container_deque.appendleft(ec)
 
-
     # TODO - item name wrapper to indicate reusability
     def item_is_reusable(self, item):
         # Small key, bombs: no
         # Big key, hookshot: yes
         return True
 
-
     # TODO region type too for item wrapper
     # dungeon items will have their dungeon
     # other things may have data too
     def item_required_region_type(self, item):
         return 'any'
-
 
     # TODO - use this with flag masking to see which entrances are valid swaps
     def can_take_entrance_in_from(self, entrance_container, current_region_container):
@@ -229,10 +224,6 @@ class RegionEntranceRandomizer:
         # Return True
         return True
 
-
-
-
-
     def take_entrance_in_from(self, entrance_container, current_region_container):
         # TODO - maybe check as above, but update state
         pass
@@ -240,10 +231,8 @@ class RegionEntranceRandomizer:
         # Allocate that space to the item
         # current_region_container.free_space_state[required_region_type] -= item_cost
 
-
     def shuffle_exit(self, entrance_container: EntranceContainer):
         pass
-
 
     def explore_region(self, region_name: str):
         """Explore a region and update the state. This assumes
@@ -267,10 +256,11 @@ class RegionEntranceRandomizer:
         cycles = 0
         start_time = time.time()
 
-        # Randomize, respecting the time and count constraints
-        while cycles < self.params.shuffle_count and time.time() - self.params.max_time_seconds < start_time:
-            # TODO - verify nonzero entrance container count?
-            entrance_container = random.choice(self.entrance_containers)
-            self.shuffle_exit(entrance_container)
+        # Don't do anything if zero entrance container count.
+        if self.entrance_containers.__len__() > 0:
+            # Randomize, respecting the time and count constraints
+            while cycles < self.params.shuffle_count and time.time() - self.params.max_time_seconds < start_time:
+                entrance_container = random.choice(self.entrance_containers)
+                self.shuffle_exit(entrance_container)
 
     pass

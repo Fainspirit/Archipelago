@@ -24,7 +24,7 @@ weights = [
 def handle_junk(autoworld):
     locations = [] #autoworld.locations
     location_count = 216 # TODO - dynamic location count
-    num_needed = location_count - autoworld.metadata["item_pool_size"]
+    num_needed = location_count - autoworld.metadata["item_pool_size"] # TODO - do this based on current size
     add_junk(autoworld, num_needed)
 
 

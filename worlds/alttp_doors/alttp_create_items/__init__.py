@@ -13,3 +13,5 @@ from .swords import handle_swords
 from .timed_clocks import handle_timed_clocks
 from .triforce_hunt import handle_triforce_hunt
 from .vanilla import create_vanilla_pool
+from .random_starting_items import handle_random_starting_items
+from .remove_starting_inventory_from_pool import handle_remove_starting_inventory_from_pool

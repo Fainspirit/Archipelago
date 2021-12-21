@@ -6,7 +6,7 @@ def randomize_region_entrances(autoworld):
     rergp = RegionRandomizer.RegionEntranceRandomizerGenericParameters()
 
     rer = RegionRandomizer.RegionEntranceRandomizer(
-        [], #autoworld.regions,
+        [],  # autoworld.regions,
         {},
         entrance_flags.EntranceType,
         rergp,

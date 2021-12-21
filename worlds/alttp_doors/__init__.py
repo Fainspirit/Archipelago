@@ -72,7 +72,6 @@ class ALTTPDoorsWorld(World):
         alttp_generate_early.handle_assured_sword(self)
         alttp_generate_early.handle_vanilla_sword_placement(self)
         alttp_generate_early.handle_glitch_boots(self)
-        alttp_generate_early.handle_random_starting_items(self)
 
         # # system for sharing ER layouts
         # self.er_seed = str(world.random.randint(0, 2 ** 64))
@@ -193,9 +192,18 @@ class ALTTPDoorsWorld(World):
         alttp_create_items.handle_item_groups(self)
 
 
-        # When to do junk and bees?
+        # Do junk here so random inventory can pull from it?
         alttp_create_items.handle_junk(self)
         alttp_create_items.handle_beemizer(self)
+
+        # Sample from the pool to add to items
+        alttp_create_items.handle_random_starting_items(self)
+
+        # Remove start inventory from pool
+        alttp_create_items.handle_remove_starting_inventory_from_pool(self)
+
+        # Fill junk in
+        alttp_create_items.handle_junk(self)
 
         # TODO: Ganon special bow? (alt)
 

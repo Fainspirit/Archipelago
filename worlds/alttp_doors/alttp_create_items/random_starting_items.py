@@ -14,27 +14,30 @@ def handle_random_starting_items(autoworld):
                      "Small Heart", "Power Star", "Faerie", "Bee Trap", "Nothing",
                      "Blue Potion", "Red Potion", "Green Potion", "Bee", "Apple",
                      "Good Bee", "Rupoor", "Single RNG", "Multi RNG", "Triforce", "Magic Jar"] # What is magic jar?
-    #src = get_pool_core(world, player)[0]
-    # This is too soon
-    #src = world.worlds[player].itempool
-    from worlds.alttp_doors import item_name_groups
-    src = item_name_groups['Everything']
 
-    pool = list(filter(lambda name: name not in invalid_items, src))
+    # Item pool has already been established
+    src = autoworld.item_pool
+
+    # Make list of the items for random pick
+    pool = []
+    for k in src:
+        if k not in invalid_items:
+            for i in range(src[k]):
+                pool.append(k)
 
     chosen_items = random.sample(pool, min(
         pool.__len__(),
         amount))
-    new_items = {}
 
     existing = autoworld.game_settings["start_inventory"].value
-    for name in chosen_items:
-        if name in new_items:
-            new_items[name] += 1
-        else:
-            new_items[name] = 1
 
-    existing |= new_items
+    # Combine Start Inventory
+    for item in chosen_items:
+        if item in existing:
+            existing[item] += 1
+        else:
+            existing[item] = 1
+
     autoworld.game_settings["start_inventory"].value = existing
     pass
 
