@@ -6,4 +6,6 @@ def handle_remove_starting_inventory_from_pool(autoworld: AutoWorld):
     item_pool = autoworld.item_pool
     for k in start_inv:
         if k in item_pool:  # If it was going to be placed
-            item_pool[k] = max(0, item_pool[k] - start_inv[k]) # Set it to amount given, or 0 if more than in pool
+            amt_to_remove = min(item_pool[k], start_inv[k])
+            item_pool[k] -= amt_to_remove # Set it to new amount, or 0 if more than in pool
+            autoworld.metadata["item_pool_size"] -= amt_to_remove

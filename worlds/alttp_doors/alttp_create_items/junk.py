@@ -30,6 +30,8 @@ def handle_junk(autoworld):
 
 
 def add_junk(autoworld, amount):
+    autoworld.metadata["item_pool_size"] += amount
+
     keys = random.choices(junk_pool, weights, k=amount)
     for k in keys:
         if k not in autoworld.item_pool:
